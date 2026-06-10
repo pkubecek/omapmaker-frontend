@@ -35,9 +35,9 @@ const styles = {
     background: 'none',
     border: '0.5px solid rgba(255,255,255,0.22)',
     color: '#fff',
-    padding: '5px 12px',
+    padding: '7px 14px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: 'var(--mono)',
     cursor: 'pointer',
     display: 'flex',
@@ -61,7 +61,7 @@ export default function Topbar({ status, canRun, running, onRun }) {
       <div style={styles.brand}>
         <span style={styles.dot} />
         OMapMaker
-        <span style={styles.version}>1.0</span>
+        <span style={styles.version}>v1.0</span>
       </div>
 
       <span style={styles.status}>{status}</span>
