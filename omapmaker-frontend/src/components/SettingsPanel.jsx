@@ -179,16 +179,17 @@ const S = {
 };
 
 const TOOLTIPS = {
-  crs: 'Souřadnicový systém vstupních dat. Pro ČR použijte S-JTSK (EPSG:5514).',
   scale: 'Měřítko výsledné mapy. 1:10 000 pro detailní mapy, 1:15 000 pro větší oblasti.',
   paper: 'Formát výstupního PNG. "Extent dat" ořízne mapu přesně na rozsah dat.',
-  sigma: 'Míra vyhlazení vrstevnic. Vyšší hodnota = hladší vrstevnice, ale méně detail. Doporučeno 5–8.',
-  slopeThreshold: 'Minimální sklon terénu (ve stupních) aby byl prvek klasifikován jako skála. Nižší = více skal.',
+  sigma: 'Míra vyhlazení vrstevnic. Vyšší hodnota = hladší vrstevnice, ale méně detailní. Doporučeno 5–8.',
+  slopeThreshold: 'Minimální sklon terénu (ve stupních) aby byl prvek klasifikován jako skála. Nižší = více skal, ale budou více splývat.',
   northRotation: 'Magnetická deklinace pro čáry magnetického severu. Pro ČR přibližně 4–6°.',
   bin1: 'Výška do které je vegetace považována za otevřený prostor (tráva, louka).',
-  bin2: 'Výška do které je vegetace klasifikována jako boj (nízký keřový porost).',
-  bin3: 'Výška do které je vegetace klasifikována jako chůze (střední porost).',
-  bin4: 'Výška do které je vegetace klasifikována jako pomalý běh (vysoký porost). Nad touto výškou = les.',
+  bin2: 'Výška do které je vegetace klasifikována jako znak (znak 410).',
+  bin3: 'Výška do které je vegetace klasifikována jako chůze (znak 408).',
+  bin4: 'Výška do které je vegetace klasifikována jako znak 406. Nad touto výškou = les (znak 405).',
+  zabaged: 'Nahrajte data veformátu .shp. Název souboru odpovídá názvu vrstvy v ZABAGED® (např. "LesniPudaSeStromy.shp")',
+  other: 'Jakákoliv jiná vrstva ve formátu .shp, která svýmnázvem odpovídá danému znaku (např. "301.shp")'
 };
 
 // Tooltip komponent
@@ -366,7 +367,6 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
         <div style={S.row}>
           <span style={S.settingLabel}>Souřadnicový systém</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Tooltip text={TOOLTIPS.crs} />
             <select style={S.select} value={settings.crs} onChange={(e) => set('crs', e.target.value)}>
               {CRS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
@@ -454,7 +454,9 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
         <div style={S.label}>Volitelná vektorová data</div>
 
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 6 }}>
-          ZABAGED® (.shp)
+          ZABAGED® (.shp) 
+          <Tooltip text={TOOLTIPS.zabaged} />
+
         </div>
         <div style={S.optionalListbox}>
           {(files.zabaged || []).map((f, i) => (
@@ -480,7 +482,8 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
           onChange={(e) => addFiles('zabaged', e.target.files)} />
 
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 6, marginTop: 8 }}>
-          Vlastní ISOM vrstvy (.shp — název = kód ISOM)
+          Vlastní vrstvy (.shp)
+          <Tooltip text={TOOLTIPS.other} />
         </div>
         <div style={S.optionalListbox}>
           {(files.isom || []).map((f, i) => (
