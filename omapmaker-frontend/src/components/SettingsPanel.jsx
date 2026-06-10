@@ -1,8 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 const S = {
   panel: {
-    width: 268,
+    width: 350,
     flexShrink: 0,
     background: 'var(--panel-bg)',
     borderRight: '0.5px solid var(--panel-border)',
@@ -178,6 +178,72 @@ const S = {
   },
 };
 
+const TOOLTIPS = {
+  crs: 'Souřadnicový systém vstupních dat. Pro ČR použijte S-JTSK (EPSG:5514).',
+  scale: 'Měřítko výsledné mapy. 1:10 000 pro detailní mapy, 1:15 000 pro větší oblasti.',
+  paper: 'Formát výstupního PNG. "Extent dat" ořízne mapu přesně na rozsah dat.',
+  sigma: 'Míra vyhlazení vrstevnic. Vyšší hodnota = hladší vrstevnice, ale méně detail. Doporučeno 5–8.',
+  slopeThreshold: 'Minimální sklon terénu (ve stupních) aby byl prvek klasifikován jako skála. Nižší = více skal.',
+  northRotation: 'Magnetická deklinace pro čáry magnetického severu. Pro ČR přibližně 4–6°.',
+  bin1: 'Výška do které je vegetace považována za otevřený prostor (tráva, louka).',
+  bin2: 'Výška do které je vegetace klasifikována jako boj (nízký keřový porost).',
+  bin3: 'Výška do které je vegetace klasifikována jako chůze (střední porost).',
+  bin4: 'Výška do které je vegetace klasifikována jako pomalý běh (vysoký porost). Nad touto výškou = les.',
+};
+
+// Tooltip komponent
+function Tooltip({ text }) {
+  const [visible, setVisible] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const btnRef = useRef();
+
+  const show = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setPos({ x: r.right + 8, y: r.top });
+    setVisible(true);
+  };
+  const hide = () => setVisible(false);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        style={{
+          background: 'none', border: 'none', cursor: 'help',
+          color: 'var(--text-muted)', fontSize: 11, lineHeight: 1,
+          padding: '0 3px', flexShrink: 0, borderRadius: '50%',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 15, height: 15,
+          border: '0.5px solid var(--panel-border)',
+        }}
+        tabIndex={-1}
+      >?</button>
+      {visible && (
+        <div style={{
+          position: 'fixed',
+          left: pos.x,
+          top: pos.y,
+          zIndex: 9999,
+          background: 'var(--ink)',
+          color: '#fff',
+          fontSize: 11,
+          fontFamily: 'var(--sans)',
+          lineHeight: 1.5,
+          padding: '7px 10px',
+          borderRadius: 6,
+          maxWidth: 220,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+          pointerEvents: 'none',
+        }}>
+          {text}
+        </div>
+      )}
+    </>
+  );
+}
+
 const CRS_OPTIONS = [
   { label: 'S-JTSK (ČR) EPSG:5514', value: 'EPSG:5514' },
   { label: 'UTM 33N EPSG:32633', value: 'EPSG:32633' },
@@ -191,12 +257,12 @@ const PAPER_OPTIONS = ['A4 na šířku', 'A4 na výšku', 'A3 na šířku', 'A3 
 const LAYERS = [
   { key: 'contours', label: 'Vrstevnice a terén', color: '#c96a3a' },
   { key: 'rocks', label: 'Skály a balvany', color: '#888' },
-  { key: 'water', label: 'Voda a bažiny', color: '#5a9ab5' },
-  { key: 'vegetation', label: 'Vegetace', color: '#4a6a38' },
-  { key: 'roads', label: 'Cesty a silnice', color: '#d4a340' },
-  { key: 'buildings', label: 'Budovy', color: '#c06060' },
+  { key: 'water', label: 'Voda a bažiny', color: '#317fa0' },
+  { key: 'vegetation', label: 'Vegetace', color: '#6b9950' },
+  { key: 'roads', label: 'Cesty a silnice', color: '#f0b643' },
+  { key: 'buildings', label: 'Budovy', color: '#2c2c2c' },
   { key: 'man_made', label: 'Umělé prvky', color: '#8060b0' },
-  { key: 'magnetic_lines', label: 'Mag. sever', color: '#5a9ab5' },
+  { key: 'magnetic_lines', label: 'Mag. sever', color: '#7bc7e6' },
 ];
 
 function FileDropZone({ id, label, icon, accept, file, onFile, onRemove, colorStyle }) {
@@ -276,17 +342,17 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
       <div style={S.section}>
         <div style={S.label}>LiDAR data</div>
         <FileDropZone
-          label="Přetáhni nebo klikni pro DTM"
-          icon="▲"
+          label="Přetáhni nebo klikni pro DMR"
+          icon="⛰️"
           accept=".las,.laz"
           file={files.dtm}
           onFile={(f) => onFiles({ ...files, dtm: f })}
           onRemove={() => onFiles({ ...files, dtm: null })}
         />
         <FileDropZone
-          label="Přetáhni nebo klikni pro DSM"
-          icon="◆"
-          accept=".las,.laz,.tif,.tiff"
+          label="Přetáhni nebo klikni pro DMP"
+          icon="🌲"
+          accept=".las,.laz,"
           file={files.dsm}
           onFile={(f) => onFiles({ ...files, dsm: f })}
           onRemove={() => onFiles({ ...files, dsm: null })}
@@ -298,44 +364,62 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
       <div style={S.section}>
         <div style={S.label}>Nastavení mapy</div>
         <div style={S.row}>
-          <span style={S.settingLabel}>Sour. systém</span>
-          <select style={S.select} value={settings.crs} onChange={(e) => set('crs', e.target.value)}>
-            {CRS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          <span style={S.settingLabel}>Souřadnicový systém</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Tooltip text={TOOLTIPS.crs} />
+            <select style={S.select} value={settings.crs} onChange={(e) => set('crs', e.target.value)}>
+              {CRS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
         </div>
         <div style={S.row}>
           <span style={S.settingLabel}>Měřítko</span>
-          <select style={S.select} value={settings.scale} onChange={(e) => set('scale', e.target.value)}>
-            <option value="10000">1 : 10 000</option>
-            <option value="15000">1 : 15 000</option>
-          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Tooltip text={TOOLTIPS.scale} />
+            <select style={S.select} value={settings.scale} onChange={(e) => set('scale', e.target.value)}>
+              <option value="10000">1 : 10 000</option>
+              <option value="15000">1 : 15 000</option>
+            </select>
+          </div>
         </div>
         <div style={S.row}>
           <span style={S.settingLabel}>Formát papíru</span>
-          <select style={S.select} value={settings.paper} onChange={(e) => set('paper', e.target.value)}>
-            {PAPER_OPTIONS.map((o) => <option key={o}>{o}</option>)}
-          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Tooltip text={TOOLTIPS.paper} />
+            <select style={S.select} value={settings.paper} onChange={(e) => set('paper', e.target.value)}>
+              {PAPER_OPTIONS.map((o) => <option key={o}>{o}</option>)}
+            </select>
+          </div>
         </div>
         <div style={S.row}>
-          <span style={S.settingLabel}>Vyhlazení σ</span>
-          <input style={S.numInput} type="number" step="0.5" min="0" max="20"
-            value={settings.sigma} onChange={(e) => set('sigma', e.target.value)} />
+          <span style={S.settingLabel}>Vyhlazení vrstevnic</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Tooltip text={TOOLTIPS.sigma} />
+            <input style={S.numInput} type="number" step="0.5" min="0" max="20"
+              value={settings.sigma} onChange={(e) => set('sigma', e.target.value)} />
+          </div>
         </div>
         <div style={S.row}>
-          <span style={S.settingLabel}>Práh skály (°)</span>
-          <input style={S.numInput} type="number" step="1" min="20" max="80"
-            value={settings.slopeThreshold} onChange={(e) => set('slopeThreshold', e.target.value)} />
+          <span style={S.settingLabel}>Minimální sklon skal (°)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Tooltip text={TOOLTIPS.slopeThreshold} />
+            <input style={S.numInput} type="number" step="1" min="20" max="80"
+              value={settings.slopeThreshold} onChange={(e) => set('slopeThreshold', e.target.value)} />
+          </div>
         </div>
         <div style={S.row}>
           <span style={S.settingLabel}>Mag. deklinace (°)</span>
-          <input style={S.numInput} type="number" step="0.1"
-            value={settings.northRotation} onChange={(e) => set('northRotation', e.target.value)} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Tooltip text={TOOLTIPS.northRotation} />
+            <input style={S.numInput} type="number" step="0.1"
+              value={settings.northRotation} onChange={(e) => set('northRotation', e.target.value)} />
+          </div>
         </div>
       </div>
 
       {/* Vegetace */}
       <div style={S.section}>
-        <div style={S.label}>Výšky vegetace (m)</div>
+        <div style={S.label}>Výška vegetace (m)</div>
         {[
           ['Otevřený prostor (do)', 'bin1'],
           ['Boj (do)', 'bin2'],
@@ -344,8 +428,11 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
         ].map(([lbl, key]) => (
           <div style={S.row} key={key}>
             <span style={S.settingLabel}>{lbl}</span>
-            <input style={S.numInput} type="number" step="0.5" min="0" max="30"
-              value={settings[key]} onChange={(e) => set(key, e.target.value)} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Tooltip text={TOOLTIPS[key]} />
+              <input style={S.numInput} type="number" step="0.5" min="0" max="30"
+                value={settings[key]} onChange={(e) => set(key, e.target.value)} />
+            </div>
           </div>
         ))}
       </div>
