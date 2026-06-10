@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { downloadCuzk } from '../api';
+import { startCuzkDownload, getCuzkStatus, getDmrUrl, getDmpUrl } from '../api';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -173,43 +173,65 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete }) {
     setCuzkState('idle');
   };
 
-  // ČÚZK stahování
+  // ČÚZK stahování s pollingem
   const handleCuzkDownload = useCallback(async () => {
     if (!bbox || cuzkState === 'downloading') return;
     setCuzkState('downloading');
     setCuzkProgress(5);
-    setCuzkMsg('Připojuji se k ČÚZK ATOM...');
+    setCuzkMsg('Spouštím stahování...');
 
-    // Simulovaný progress (skutečný progress není z API dostupný)
-    const steps = [
-      [15, 'Načítám feed DMR 5G...'],
-      [30, `Načítám feed ${dsmType}...`],
-      [50, 'Stahuji dlaždice...'],
-      [75, 'Mergování souborů...'],
-    ];
-    let si = 0;
-    const interval = setInterval(() => {
-      if (si < steps.length) {
-        setCuzkProgress(steps[si][0]);
-        setCuzkMsg(steps[si][1]);
-        si++;
+    let dlId = null;
+    try {
+      const { download_id } = await startCuzkDownload(bbox, dsmType);
+      dlId = download_id;
+    } catch (err) {
+      setCuzkMsg(`Chyba: ${err.response?.data?.detail || err.message}`);
+      setCuzkState('error');
+      return;
+    }
+
+    // Polling každé 3 sekundy
+    const poll = setInterval(async () => {
+      try {
+        const s = await getCuzkStatus(dlId);
+        setCuzkProgress(s.progress || 0);
+        setCuzkMsg(s.step || '');
+
+        if (s.status === 'done') {
+          clearInterval(poll);
+
+          // Stáhni soubory jako Blob a vytvoř File objekty
+          setCuzkMsg('Načítám soubory...');
+          try {
+            const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+            const [dmrResp, dmpResp] = await Promise.all([
+              fetch(`${BASE}/api/download/cuzk/${dlId}/dmr`),
+              fetch(`${BASE}/api/download/cuzk/${dlId}/dmp`),
+            ]);
+            const dmrBlob = await dmrResp.blob();
+            const dmpBlob = await dmpResp.blob();
+            const dmrFile = new File([dmrBlob], 'DMR5G_merged.laz', { type: 'application/octet-stream' });
+            const dmpFile = new File([dmpBlob], `${dsmType}_merged.laz`, { type: 'application/octet-stream' });
+
+            setCuzkState('done');
+            setCuzkProgress(100);
+            setCuzkMsg('✓ Soubory načteny jako vstup');
+            if (onCuzkComplete) onCuzkComplete(dmrFile, dmpFile);
+          } catch (fetchErr) {
+            setCuzkMsg(`Chyba načítání souborů: ${fetchErr.message}`);
+            setCuzkState('error');
+          }
+        } else if (s.status === 'error') {
+          clearInterval(poll);
+          setCuzkMsg(`Chyba: ${s.error || s.step}`);
+          setCuzkState('error');
+        }
+      } catch (pollErr) {
+        clearInterval(poll);
+        setCuzkMsg(`Chyba připojení: ${pollErr.message}`);
+        setCuzkState('error');
       }
     }, 3000);
-
-    try {
-      const result = await downloadCuzk(bbox, dsmType, './cuzk_data');
-      clearInterval(interval);
-      setCuzkProgress(100);
-      setCuzkMsg('Hotovo!');
-      setCuzkState('done');
-      if (onCuzkComplete) onCuzkComplete(result.dmr_path, result.dmp_path);
-    } catch (err) {
-      clearInterval(interval);
-      const msg = err.response?.data?.detail || err.message;
-      setCuzkMsg(`Chyba: ${msg}`);
-      setCuzkState('error');
-      setCuzkProgress(0);
-    }
   }, [bbox, dsmType, cuzkState, onCuzkComplete]);
 
   const bboxLabel = bbox

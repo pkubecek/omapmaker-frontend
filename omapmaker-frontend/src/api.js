@@ -39,12 +39,40 @@ export function getGpkgUrl(jobId) {
 }
 
 /**
- * Trigger ČÚZK tile download on the server.
- * @param {object} bbox   - { min_lat, min_lon, max_lat, max_lon }
- * @param {string} dsmType - 'DMPOK' | 'DMP1G'
- * @param {string} outDir  - server-side output directory
+ * Spustí stahování ČÚZK na pozadí.
+ * Vrací { download_id }
+ */
+export async function startCuzkDownload(bbox, dsmType) {
+  const res = await api.post('/api/download/cuzk', {
+    bbox,
+    dsm_type: dsmType,
+  });
+  return res.data;
+}
+
+/**
+ * Polling stavu stahování.
+ * Vrací { status, progress, step, dmr_path, dmp_path, error }
+ */
+export async function getCuzkStatus(downloadId) {
+  const res = await api.get(`/api/download/cuzk/${downloadId}`);
+  return res.data;
+}
+
+/** URL pro stažení DMR souboru */
+export function getDmrUrl(downloadId) {
+  return `${BASE}/api/download/cuzk/${downloadId}/dmr`;
+}
+
+/** URL pro stažení DMP souboru */
+export function getDmpUrl(downloadId) {
+  return `${BASE}/api/download/cuzk/${downloadId}/dmp`;
+}
+
+/**
+ * @deprecated - použij startCuzkDownload + polling
  */
 export async function downloadCuzk(bbox, dsmType, outDir) {
-  const res = await api.post('/api/download/cuzk', { bbox, dsm_type: dsmType, out_dir: outDir });
-  return res.data; // { dmr_path, dmp_path }
+  const res = await api.post('/api/download/cuzk', { bbox, dsm_type: dsmType });
+  return res.data;
 }

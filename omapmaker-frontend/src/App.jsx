@@ -132,11 +132,10 @@ export default function App() {
     }
   }, [files, settings, bbox, addLog, pollJob]);
 
-  const handleCuzkComplete = useCallback((dmrPath, dmpPath) => {
-    addLog(`DTM staženo: ${dmrPath}`, 'ok');
-    addLog(`DSM staženo: ${dmpPath}`, 'ok');
-    // In a real deployment paths would be pre-populated or files returned
-    // For now just log them; user can also manually load
+  const handleCuzkComplete = useCallback((dmrFile, dmpFile) => {
+    addLog(`DTM načteno: ${dmrFile.name} (${(dmrFile.size / 1e6).toFixed(1)} MB)`, 'ok');
+    addLog(`DSM načteno: ${dmpFile.name} (${(dmpFile.size / 1e6).toFixed(1)} MB)`, 'ok');
+    setFiles(prev => ({ ...prev, dtm: dmrFile, dsm: dmpFile }));
   }, [addLog]);
 
   const canRun = Boolean(files.dtm && files.dsm);
