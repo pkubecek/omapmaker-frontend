@@ -225,7 +225,7 @@ export default function OutputPanel({ job, logLines }) {
             }}
             disabled={!isDone}
           >
-            ⬡ Exportovat GPKG pro OOM
+            ⬡ Exportovat GPKG pro OpenOrienteeringMapper
           </button>
         </a>
       </div>
