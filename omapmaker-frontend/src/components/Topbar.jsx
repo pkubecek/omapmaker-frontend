@@ -55,7 +55,7 @@ const styles = {
   },
 };
 
-export default function Topbar({ status, canRun, running, onDownloadCuzk, onRun }) {
+export default function Topbar({ status, canRun, running, onRun }) {
   return (
     <div style={styles.bar}>
       <div style={styles.brand}>
@@ -67,13 +67,6 @@ export default function Topbar({ status, canRun, running, onDownloadCuzk, onRun 
       <span style={styles.status}>{status}</span>
 
       <div style={styles.actions}>
-        <button
-          style={styles.btn}
-          onClick={onDownloadCuzk}
-          title="Stáhnout LiDAR dlaždice z ČÚZK ATOM"
-        >
-          ↓ Stáhnout z ČÚZK
-        </button>
         <button
           style={{
             ...styles.btn,

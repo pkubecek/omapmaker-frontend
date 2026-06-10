@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { downloadCuzk } from '../api';
 
-// Fix default marker icons broken by webpack
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -13,90 +13,81 @@ L.Icon.Default.mergeOptions({
 const S = {
   wrap: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
   toolbar: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    padding: '8px 12px',
-    background: 'var(--panel-bg)',
-    borderBottom: '0.5px solid var(--panel-border)',
-    flexShrink: 0,
+    display: 'flex', alignItems: 'center', gap: 6,
+    padding: '8px 12px', background: 'var(--panel-bg)',
+    borderBottom: '0.5px solid var(--panel-border)', flexShrink: 0, flexWrap: 'wrap',
   },
   toolBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 4,
-    background: 'none',
-    border: '0.5px solid var(--panel-border)',
-    borderRadius: 'var(--radius-sm)',
-    padding: '4px 10px',
-    fontSize: 11,
-    cursor: 'pointer',
-    color: 'var(--text-secondary)',
-    fontFamily: 'var(--sans)',
-    transition: 'background 0.15s',
+    display: 'flex', alignItems: 'center', gap: 4, background: 'none',
+    border: '0.5px solid var(--panel-border)', borderRadius: 'var(--radius-sm)',
+    padding: '4px 10px', fontSize: 11, cursor: 'pointer',
+    color: 'var(--text-secondary)', fontFamily: 'var(--sans)', transition: 'background 0.15s',
   },
-  toolBtnActive: {
-    background: '#f0ead6',
-    color: 'var(--text-primary)',
-    borderColor: '#d0c8b8',
-  },
-  divider: {
-    width: '0.5px',
-    height: 16,
-    background: 'var(--panel-border)',
-    margin: '0 2px',
-    flexShrink: 0,
-  },
-  bboxInfo: {
-    marginLeft: 'auto',
-    fontFamily: 'var(--mono)',
-    fontSize: 10,
-    color: 'var(--text-secondary)',
-  },
+  toolBtnActive: { background: '#f0ead6', color: 'var(--text-primary)', borderColor: '#d0c8b8' },
+  divider: { width: '0.5px', height: 16, background: 'var(--panel-border)', margin: '0 2px', flexShrink: 0 },
+  bboxInfo: { fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-secondary)' },
   mapContainer: { flex: 1, position: 'relative' },
   hint: {
-    position: 'absolute',
-    bottom: 12,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    background: 'rgba(26,31,46,0.82)',
-    color: '#fff',
-    fontFamily: 'var(--mono)',
-    fontSize: 11,
-    padding: '5px 14px',
-    borderRadius: 20,
-    pointerEvents: 'none',
-    whiteSpace: 'nowrap',
-    zIndex: 1000,
+    position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+    background: 'rgba(26,31,46,0.82)', color: '#fff', fontFamily: 'var(--mono)',
+    fontSize: 11, padding: '5px 14px', borderRadius: 20, pointerEvents: 'none',
+    whiteSpace: 'nowrap', zIndex: 1000,
   },
+  // ČÚZK inline panel
+  cuzkPanel: {
+    display: 'flex', alignItems: 'center', gap: 8,
+    padding: '6px 12px', background: '#f6f9f3',
+    borderBottom: '0.5px solid #d0e0c0', flexShrink: 0, flexWrap: 'wrap',
+  },
+  cuzkLabel: { fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--mono)' },
+  cuzkSelect: {
+    fontFamily: 'var(--mono)', fontSize: 11, padding: '3px 6px',
+    borderRadius: 'var(--radius-sm)', border: '0.5px solid var(--panel-border)',
+    background: '#fff', cursor: 'pointer',
+  },
+  cuzkBtn: {
+    display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px',
+    borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--rock)',
+    color: '#fff', fontSize: 11, fontFamily: 'var(--mono)', cursor: 'pointer',
+    transition: 'opacity 0.15s',
+  },
+  cuzkProgress: {
+    flex: 1, display: 'flex', alignItems: 'center', gap: 8,
+  },
+  cuzkBarWrap: {
+    flex: 1, height: 4, background: '#e0ddd5', borderRadius: 2, overflow: 'hidden', minWidth: 60,
+  },
+  cuzkBarFill: { height: '100%', background: 'var(--forest)', borderRadius: 2, transition: 'width 0.4s' },
+  cuzkMsg: { fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-secondary)', whiteSpace: 'nowrap' },
 };
 
 function fmtCoord(v) { return v.toFixed(4); }
 
-export default function MapView({ bbox, onBboxChange }) {
+export default function MapView({ bbox, onBboxChange, onCuzkComplete }) {
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
   const rectRef = useRef(null);
-  const [tool, setTool] = useState('pan'); // 'pan' | 'select'
   const drawState = useRef({ drawing: false, start: null });
+  const [tool, setTool] = useState('pan');
+
+  // ČÚZK state
+  const [dsmType, setDsmType] = useState('DMPOK');
+  const [cuzkState, setCuzkState] = useState('idle'); // idle | downloading | done | error
+  const [cuzkProgress, setCuzkProgress] = useState(0);
+  const [cuzkMsg, setCuzkMsg] = useState('');
 
   // Init map
   useEffect(() => {
     if (leafletRef.current) return;
-    const map = L.map(mapRef.current, {
-      center: [49.8, 15.5],
-      zoom: 7,
-      zoomControl: true,
-    });
+    const map = L.map(mapRef.current, { center: [49.8, 15.5], zoom: 7, zoomControl: true });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 19,
+      attribution: '© OpenStreetMap', maxZoom: 19,
     }).addTo(map);
     leafletRef.current = map;
     return () => { map.remove(); leafletRef.current = null; };
   }, []);
 
-  // Draw existing bbox on mount / when it changes externally
+  // Draw bbox
   useEffect(() => {
     const map = leafletRef.current;
     if (!map) return;
@@ -109,7 +100,7 @@ export default function MapView({ bbox, onBboxChange }) {
     }
   }, [bbox]);
 
-  // Tool switching — attach / detach mouse handlers
+  // Tool mouse handlers
   useEffect(() => {
     const map = leafletRef.current;
     if (!map) return;
@@ -117,15 +108,11 @@ export default function MapView({ bbox, onBboxChange }) {
 
     if (tool === 'pan') {
       map.dragging.enable();
-      map.scrollWheelZoom.enable();
       container.style.cursor = '';
-      map.off('mousedown', onMouseDown);
       return;
     }
 
-    // Select mode
     map.dragging.disable();
-    map.scrollWheelZoom.enable();
     container.style.cursor = 'crosshair';
 
     let startLatLng = null;
@@ -136,37 +123,33 @@ export default function MapView({ bbox, onBboxChange }) {
       if (rectRef.current) { rectRef.current.remove(); rectRef.current = null; }
       if (tempRect) { tempRect.remove(); tempRect = null; }
       drawState.current.drawing = true;
+      // reset ČÚZK state při novém výběru
+      setCuzkState('idle');
+      setCuzkProgress(0);
+      setCuzkMsg('');
     }
-
     function onMouseMove(e) {
       if (!drawState.current.drawing || !startLatLng) return;
       if (tempRect) tempRect.remove();
-      tempRect = L.rectangle(
-        [startLatLng, e.latlng],
-        { color: '#c96a3a', weight: 1.5, dashArray: '5 3', fillColor: '#c96a3a', fillOpacity: 0.05 }
-      ).addTo(map);
+      tempRect = L.rectangle([startLatLng, e.latlng], {
+        color: '#c96a3a', weight: 1.5, dashArray: '5 3', fillOpacity: 0.05,
+      }).addTo(map);
     }
-
     function onMouseUp(e) {
       if (!drawState.current.drawing || !startLatLng) return;
       drawState.current.drawing = false;
       if (tempRect) { tempRect.remove(); tempRect = null; }
-
       const b = {
         min_lat: Math.min(startLatLng.lat, e.latlng.lat),
         max_lat: Math.max(startLatLng.lat, e.latlng.lat),
         min_lon: Math.min(startLatLng.lng, e.latlng.lng),
         max_lon: Math.max(startLatLng.lng, e.latlng.lng),
       };
-      const latSpan = b.max_lat - b.min_lat;
-      const lonSpan = b.max_lon - b.min_lon;
-      if (latSpan < 0.001 || lonSpan < 0.001) return; // too small
-
+      if (b.max_lat - b.min_lat < 0.001 || b.max_lon - b.min_lon < 0.001) { startLatLng = null; return; }
       rectRef.current = L.rectangle(
         [[b.min_lat, b.min_lon], [b.max_lat, b.max_lon]],
-        { color: '#c96a3a', weight: 2, dashArray: '6 4', fillColor: '#c96a3a', fillOpacity: 0.07 }
+        { color: '#c96a3a', weight: 2, dashArray: '6 4', fillOpacity: 0.07 }
       ).addTo(map);
-
       onBboxChange(b);
       startLatLng = null;
     }
@@ -174,62 +157,141 @@ export default function MapView({ bbox, onBboxChange }) {
     map.on('mousedown', onMouseDown);
     map.on('mousemove', onMouseMove);
     map.on('mouseup', onMouseUp);
-
     return () => {
       map.off('mousedown', onMouseDown);
       map.off('mousemove', onMouseMove);
       map.off('mouseup', onMouseUp);
       if (tempRect) tempRect.remove();
       container.style.cursor = '';
+      map.dragging.enable();
     };
   }, [tool, onBboxChange]);
 
   const clearBbox = () => {
     if (rectRef.current) { rectRef.current.remove(); rectRef.current = null; }
     onBboxChange(null);
+    setCuzkState('idle');
   };
+
+  // ČÚZK stahování
+  const handleCuzkDownload = useCallback(async () => {
+    if (!bbox || cuzkState === 'downloading') return;
+    setCuzkState('downloading');
+    setCuzkProgress(5);
+    setCuzkMsg('Připojuji se k ČÚZK ATOM...');
+
+    // Simulovaný progress (skutečný progress není z API dostupný)
+    const steps = [
+      [15, 'Načítám feed DMR 5G...'],
+      [30, `Načítám feed ${dsmType}...`],
+      [50, 'Stahuji dlaždice...'],
+      [75, 'Mergování souborů...'],
+    ];
+    let si = 0;
+    const interval = setInterval(() => {
+      if (si < steps.length) {
+        setCuzkProgress(steps[si][0]);
+        setCuzkMsg(steps[si][1]);
+        si++;
+      }
+    }, 3000);
+
+    try {
+      const result = await downloadCuzk(bbox, dsmType, './cuzk_data');
+      clearInterval(interval);
+      setCuzkProgress(100);
+      setCuzkMsg('Hotovo!');
+      setCuzkState('done');
+      if (onCuzkComplete) onCuzkComplete(result.dmr_path, result.dmp_path);
+    } catch (err) {
+      clearInterval(interval);
+      const msg = err.response?.data?.detail || err.message;
+      setCuzkMsg(`Chyba: ${msg}`);
+      setCuzkState('error');
+      setCuzkProgress(0);
+    }
+  }, [bbox, dsmType, cuzkState, onCuzkComplete]);
 
   const bboxLabel = bbox
     ? `${fmtCoord(bbox.min_lat)}–${fmtCoord(bbox.max_lat)} N · ${fmtCoord(bbox.min_lon)}–${fmtCoord(bbox.max_lon)} E`
     : '';
 
+  const kmLat = bbox ? ((bbox.max_lat - bbox.min_lat) * 111).toFixed(1) : null;
+  const kmLon = bbox ? ((bbox.max_lon - bbox.min_lon) * 111 * Math.cos((bbox.min_lat + bbox.max_lat) / 2 * Math.PI / 180)).toFixed(1) : null;
+
   return (
     <div style={S.wrap}>
+      {/* Toolbar */}
       <div style={S.toolbar}>
         <button
           style={{ ...S.toolBtn, ...(tool === 'pan' ? S.toolBtnActive : {}) }}
           onClick={() => setTool('pan')}
-          onMouseEnter={(e) => { if (tool !== 'pan') e.currentTarget.style.background = '#f5f4f0'; }}
-          onMouseLeave={(e) => { if (tool !== 'pan') e.currentTarget.style.background = 'none'; }}
-        >
-          ✋ Posun
-        </button>
+        >✋ Posun</button>
         <button
           style={{ ...S.toolBtn, ...(tool === 'select' ? S.toolBtnActive : {}) }}
           onClick={() => setTool('select')}
-          onMouseEnter={(e) => { if (tool !== 'select') e.currentTarget.style.background = '#f5f4f0'; }}
-          onMouseLeave={(e) => { if (tool !== 'select') e.currentTarget.style.background = 'none'; }}
-        >
-          ⬜ Výběr oblasti
-        </button>
+        >⬜ Výběr oblasti</button>
         <div style={S.divider} />
         {bbox && (
-          <button
-            style={S.toolBtn}
-            onClick={clearBbox}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#f5f4f0'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-          >
-            × Zrušit výběr
-          </button>
+          <button style={S.toolBtn} onClick={clearBbox}>× Zrušit</button>
         )}
-        {bboxLabel && <span style={S.bboxInfo}>{bboxLabel}</span>}
+        {bboxLabel && (
+          <span style={S.bboxInfo}>
+            {bboxLabel}
+            {kmLat && <span style={{ marginLeft: 6, color: 'var(--text-muted)' }}>~{kmLat}×{kmLon} km</span>}
+          </span>
+        )}
       </div>
 
+      {/* ČÚZK inline panel — zobrazí se po výběru oblasti */}
+      {bbox && (
+        <div style={S.cuzkPanel}>
+          <span style={S.cuzkLabel}>Stáhnout z ČÚZK:</span>
+          <select
+            style={S.cuzkSelect}
+            value={dsmType}
+            onChange={(e) => setDsmType(e.target.value)}
+            disabled={cuzkState === 'downloading'}
+          >
+            <option value="DMPOK">DMP OK (doporučeno)</option>
+            <option value="DMP1G">DMP 1G</option>
+          </select>
+
+          {cuzkState === 'idle' && (
+            <button style={S.cuzkBtn} onClick={handleCuzkDownload}>
+              ↓ Stáhnout DMR + DMP
+            </button>
+          )}
+
+          {cuzkState === 'downloading' && (
+            <div style={S.cuzkProgress}>
+              <div style={S.cuzkBarWrap}>
+                <div style={{ ...S.cuzkBarFill, width: `${cuzkProgress}%` }} />
+              </div>
+              <span style={S.cuzkMsg}>{cuzkMsg}</span>
+            </div>
+          )}
+
+          {cuzkState === 'done' && (
+            <span style={{ ...S.cuzkMsg, color: 'var(--forest)' }}>✓ Staženo — soubory nastaveny jako vstup</span>
+          )}
+
+          {cuzkState === 'error' && (
+            <>
+              <span style={{ ...S.cuzkMsg, color: 'var(--rock)' }}>{cuzkMsg}</span>
+              <button style={{ ...S.cuzkBtn, background: 'var(--text-secondary)' }} onClick={handleCuzkDownload}>
+                Zkusit znovu
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Mapa */}
       <div style={S.mapContainer}>
         <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
         {tool === 'select' && !bbox && (
-          <div style={S.hint}>Táhněte myší pro výběr oblasti zpracování</div>
+          <div style={S.hint}>Táhněte myší pro výběr oblasti — pak stáhněte z ČÚZK nebo nahrajte vlastní data</div>
         )}
       </div>
     </div>

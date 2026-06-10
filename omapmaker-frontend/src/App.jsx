@@ -57,7 +57,6 @@ export default function App() {
   const [bbox, setBbox] = useState(null);
   const [job, setJob] = useState({ status: 'idle', progress: 0, step: '', jobId: null });
   const [logLines, setLogLines] = useState([]);
-  const [showCuzk, setShowCuzk] = useState(false);
   const pollRef = useRef(null);
 
   const addLog = useCallback((msg, type = 'info') => {
@@ -158,7 +157,6 @@ export default function App() {
         status={topStatus}
         canRun={canRun}
         running={running}
-        onDownloadCuzk={() => setShowCuzk(true)}
         onRun={handleRun}
       />
 
@@ -170,17 +168,10 @@ export default function App() {
           onFiles={setFiles}
         />
 
-        <MapView bbox={bbox} onBboxChange={setBbox} />
+        <MapView bbox={bbox} onBboxChange={setBbox} onCuzkComplete={handleCuzkComplete} />
 
         <OutputPanel job={job} logLines={logLines} />
       </div>
-
-      {showCuzk && (
-        <CuzkDownloader
-          onComplete={handleCuzkComplete}
-          onClose={() => setShowCuzk(false)}
-        />
-      )}
     </div>
   );
 }
