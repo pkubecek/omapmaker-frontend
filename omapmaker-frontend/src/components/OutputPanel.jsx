@@ -3,7 +3,7 @@ import { getPngUrl, getGpkgUrl } from '../api';
 
 const S = {
   panel: {
-    width: 288,
+    width: 350,
     flexShrink: 0,
     background: 'var(--panel-bg)',
     borderLeft: '0.5px solid var(--panel-border)',
