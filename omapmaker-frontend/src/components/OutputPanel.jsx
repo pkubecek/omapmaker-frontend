@@ -3,7 +3,7 @@ import { getPngUrl, getGpkgUrl } from '../api';
 
 const S = {
   panel: {
-    width: 288,
+    width: 350,
     flexShrink: 0,
     background: 'var(--panel-bg)',
     borderLeft: '0.5px solid var(--panel-border)',
@@ -247,7 +247,7 @@ export default function OutputPanel({ job, logLines }) {
 
         <DlBtn href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/OMapMaker-OpenOrienteeringMapper.crt`}
           download="isom.crt">
-          ↓ Stáhnout CRT soubor pro import do OpenOrienteerinMapper
+          ↓ Stáhnout CRT soubor
         </DlBtn>
       </div>
     </div>
