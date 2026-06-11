@@ -425,7 +425,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
         <div style={S.label}>Výška vegetace (m)</div>
         {[
           ['Otevřený prostor (do)', 'bin1'],
-          ['Boj (do)', 'bin2'],
+          ['Prodírání (do)', 'bin2'],
           ['Chůze (do)', 'bin3'],
           ['Pomalý běh (do)', 'bin4'],
         ].map(([lbl, key]) => (
