@@ -179,6 +179,7 @@ const S = {
 };
 
 const TOOLTIPS = {
+  lidar: 'Nahrajte data ze zařízení nebo vyberte oblast tažením v mapě a stáhněte.',
   scale: 'Měřítko výsledné mapy. 1:10 000 pro detailní mapy, 1:15 000 pro větší oblasti.',
   paper: 'Formát výstupního PNG. "Extent dat" ořízne mapu přesně na rozsah dat.',
   sigma: 'Míra vyhlazení vrstevnic. Vyšší hodnota = hladší vrstevnice, ale méně detailní. Doporučeno 5–8.',
@@ -341,7 +342,9 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
     <div style={S.panel}>
       {/* LiDAR */}
       <div style={S.section}>
-        <div style={S.label}>LiDAR data</div>
+        <div style={S.label}>LiDAR data 
+        <Tooltip text={TOOLTIPS.lidar} />
+        </div>
         <FileDropZone
           label="Přetáhni nebo klikni pro DMR"
           icon="⛰️"
