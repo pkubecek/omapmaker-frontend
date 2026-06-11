@@ -3,7 +3,7 @@ import { getPngUrl, getGpkgUrl } from '../api';
 
 const S = {
   panel: {
-    width: 350,
+    width: 288,
     flexShrink: 0,
     background: 'var(--panel-bg)',
     borderLeft: '0.5px solid var(--panel-border)',
@@ -225,7 +225,17 @@ export default function OutputPanel({ job, logLines }) {
             }}
             disabled={!isDone}
           >
-            ⬡ Exportovat GPKG pro OpenOrienteeringMapper
+            ⬇ Exportovat GPKG pro OOM
+          </button>
+        </a>
+
+        <a
+          href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/OMapMaker-OpenOrienteeringMapper.crt`}
+          download="isom.crt"
+          style={{ textDecoration: 'none' }}
+        >
+          <button style={S.dlBtn}>
+            ⬇ Stáhnout CTR soubor pro import do OpenOrienteeringMapper
           </button>
         </a>
       </div>
