@@ -343,7 +343,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
       {/* LiDAR */}
       <div style={S.section}>
         <div style={S.label}>LiDAR data 
-         <div style={S.label}><Tooltip text={TOOLTIPS.lidar} /></div>
+        <div style={S.settingLabel}><Tooltip text={TOOLTIPS.lidar} /></div>
         </div>
         <FileDropZone
           label="Přetáhni nebo klikni pro DMR"
