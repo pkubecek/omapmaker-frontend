@@ -245,7 +245,6 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete }) {
     <div style={S.wrap}>
       {/* Toolbar */}
       <div style={S.toolbar}>
-        <div>Stažení dat</div>
         <button
           style={{ ...S.toolBtn, ...(tool === 'pan' ? S.toolBtnActive : {}) }}
           onClick={() => setTool('pan')}
@@ -313,6 +312,9 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete }) {
       {/* Mapa */}
       <div style={S.mapContainer}>
         <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+        {tool === 'pan' && !bbox && (
+          <div style={S.hint}>Vyberte oblast – nástron Výběr oblasti</div>
+        )}
         {tool === 'select' && !bbox && (
           <div style={S.hint}>Táhněte myší pro výběr oblasti — pak stáhněte z ČÚZK nebo nahrajte vlastní data</div>
         )}
