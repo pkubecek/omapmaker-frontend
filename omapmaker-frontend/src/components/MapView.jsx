@@ -244,8 +244,8 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete }) {
   return (
     <div style={S.wrap}>
       {/* Toolbar */}
-      <div>Stažení dat</div>
       <div style={S.toolbar}>
+        <div>Stažení dat</div>
         <button
           style={{ ...S.toolBtn, ...(tool === 'pan' ? S.toolBtnActive : {}) }}
           onClick={() => setTool('pan')}
