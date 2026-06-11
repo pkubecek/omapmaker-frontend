@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getPngUrl, getGpkgUrl } from '../api';
 
 const S = {
@@ -106,6 +106,45 @@ const S = {
   dlBtnDisabled: { opacity: 0.38, cursor: 'not-allowed' },
 };
 
+// Tlačítko se stažením + hover efekt
+function DlBtn({ href, download, disabled, primary, children }) {
+  const [hovered, setHovered] = useState(false);
+
+  const baseStyle = {
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+    width: '100%', padding: '8px 0', borderRadius: 'var(--radius-md)',
+    fontSize: 12, cursor: disabled ? 'not-allowed' : 'pointer',
+    marginBottom: 6, fontFamily: 'var(--sans)', textDecoration: 'none',
+    border: '0.5px solid var(--panel-border)',
+    transition: 'background 0.15s, border-color 0.15s, opacity 0.15s',
+    opacity: disabled ? 0.38 : 1,
+    ...(primary ? {
+      background: hovered && !disabled ? '#2d3448' : 'var(--ink)',
+      color: '#fff',
+      borderColor: 'var(--ink)',
+    } : {
+      background: hovered && !disabled ? 'var(--color-background-secondary, #f5f4f0)' : 'none',
+      color: 'var(--text-primary)',
+    }),
+  };
+
+  if (disabled) {
+    return <button style={baseStyle} disabled>{children}</button>;
+  }
+
+  return (
+    <a
+      href={href}
+      download={download}
+      style={baseStyle}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </a>
+  );
+}
+
 const STATUS_LABELS = {
   idle: 'Čeká na spuštění',
   queued: 'Ve frontě...',
@@ -196,48 +235,20 @@ export default function OutputPanel({ job, logLines }) {
           )}
         </div>
 
-        <a
-          href={isDone && jobId ? getPngUrl(jobId) : undefined}
-          download="OMap.png"
-          style={{ textDecoration: 'none' }}
-        >
-          <button
-            style={{
-              ...S.dlBtn,
-              ...S.dlBtnPrimary,
-              ...(!isDone ? S.dlBtnDisabled : {}),
-            }}
-            disabled={!isDone}
-          >
-            ↓ Stáhnout mapu PNG
-          </button>
-        </a>
+        <DlBtn href={isDone && jobId ? getPngUrl(jobId) : undefined}
+          download="OMap.png" disabled={!isDone} primary>
+          ↓ Stáhnout mapu PNG
+        </DlBtn>
 
-        <a
-          href={isDone && jobId ? getGpkgUrl(jobId) : undefined}
-          download="OMap.gpkg"
-          style={{ textDecoration: 'none' }}
-        >
-          <button
-            style={{
-              ...S.dlBtn,
-              ...(!isDone ? S.dlBtnDisabled : {}),
-            }}
-            disabled={!isDone}
-          >
-            ⬇ Exportovat GPKG pro OOM
-          </button>
-        </a>
+        <DlBtn href={isDone && jobId ? getGpkgUrl(jobId) : undefined}
+          download="OMap.gpkg" disabled={!isDone}>
+          ↓ Exportovat GPKG pro OpenOrienteerinMapper
+        </DlBtn>
 
-        <a
-          href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/OMapMaker-OpenOrienteeringMapper.crt`}
-          download="isom.crt"
-          style={{ textDecoration: 'none' }}
-        >
-          <button style={S.dlBtn}>
-            ⬇ Stáhnout CTR soubor pro import do OpenOrienteeringMapper
-          </button>
-        </a>
+        <DlBtn href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/OMapMaker-OpenOrienteeringMapper.crt`}
+          download="isom.crt">
+          ↓ Stáhnout CRT soubor pro import do OpenOrienteerinMapper
+        </DlBtn>
       </div>
     </div>
   );
