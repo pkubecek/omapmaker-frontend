@@ -184,7 +184,7 @@ const TOOLTIPS = {
   paper: 'Formát výstupního PNG. "Extent dat" ořízne mapu přesně na rozsah dat.',
   sigma: 'Míra vyhlazení vrstevnic. Vyšší hodnota = hladší vrstevnice, ale méně detailní. Doporučeno 5–8.',
   slopeThreshold: 'Minimální sklon terénu (ve stupních) aby byl prvek klasifikován jako skála. Nižší = více skal, ale budou více splývat.',
-  northRotation: 'Magnetická deklinace pro čáry magnetického severu. Pro ČR přibližně 4–6°.',
+  northRotation: 'Odchylka mag. severu od zvoleného souřadnicového systému.',
   bin1: 'Výška do které je vegetace považována za otevřený prostor (tráva, louka).',
   bin2: 'Výška do které je vegetace klasifikována jako znak (znak 410).',
   bin3: 'Výška do které je vegetace klasifikována jako chůze (znak 408).',
