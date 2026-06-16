@@ -5,6 +5,9 @@ import MapView from './components/MapView';
 import OutputPanel from './components/OutputPanel';
 import CuzkDownloader from './components/CuzkDownloader';
 import HelpModal from './components/HelpModal';
+import MobileLayout from './components/MobileLayout';
+import TabletLayout from './components/TabletLayout';
+import { useBreakpoint } from './hooks/useBreakpoint';
 import { startJob, getJobStatus } from './api';
 
 const DEFAULT_SETTINGS = {
@@ -170,33 +173,60 @@ export default function App() {
     setFiles(prev => ({ ...prev, dtm: dmrFile, dsm: dmpFile }));
   }, [addLog]);
 
-  const canRun = Boolean(files.dtm && files.dsm);
-  const running = job.status === 'running' || job.status === 'queued';
+  const { isMobile, isTablet } = useBreakpoint();
 
-  let topStatus = 'Připraveno';
-  if (!files.dtm && !files.dsm) topStatus = 'Nahrajte DTM a DSM';
-  else if (!files.dtm) topStatus = 'Chybí DTM';
-  else if (!files.dsm) topStatus = 'Chybí DSM';
-  else if (running) topStatus = 'Zpracovávám...';
-  else if (job.status === 'done') topStatus = 'Mapa vygenerována ✓';
-  else if (job.status === 'error') topStatus = 'Chyba!';
-  else topStatus = 'Připraveno ke spuštění';
+  const settingsPane = (
+    <SettingsPanel
+      settings={settings}
+      onSettings={setSettings}
+      files={files}
+      onFiles={setFiles}
+    />
+  );
+
+  const mapPane = (
+    <MapView
+      bbox={bbox}
+      onBboxChange={setBbox}
+      onCuzkComplete={handleCuzkComplete}
+      onHelp={() => setShowHelp(true)}
+    />
+  );
+
+  const outputPane = (
+    <OutputPanel
+      job={job}
+      logLines={logLines}
+      canRun={canRun}
+      running={running}
+      onRun={handleRun}
+    />
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       <Topbar status={topStatus} />
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <SettingsPanel
-          settings={settings}
-          onSettings={setSettings}
-          files={files}
-          onFiles={setFiles}
-        />
-
-        <MapView bbox={bbox} onBboxChange={setBbox} onCuzkComplete={handleCuzkComplete} onHelp={() => setShowHelp(true)} />
-
-        <OutputPanel job={job} logLines={logLines} canRun={canRun} running={running} onRun={handleRun} />
+      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {isMobile ? (
+          <MobileLayout
+            settingsPane={settingsPane}
+            mapPane={mapPane}
+            outputPane={outputPane}
+          />
+        ) : isTablet ? (
+          <TabletLayout
+            settingsPane={settingsPane}
+            mapPane={mapPane}
+            outputPane={outputPane}
+          />
+        ) : (
+          <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+            {settingsPane}
+            {mapPane}
+            {outputPane}
+          </div>
+        )}
       </div>
 
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
