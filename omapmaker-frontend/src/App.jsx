@@ -14,7 +14,7 @@ const DEFAULT_SETTINGS = {
   crs: 'EPSG:5514',
   scale: '10000',
   paper: 'A4 na šířku',
-  sigma: '6.5',
+  sigma: '4',
   slopeThreshold: '45',
   northRotation: '5',
   bin1: '1',
