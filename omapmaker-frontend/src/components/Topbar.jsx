@@ -35,9 +35,9 @@ const styles = {
     background: 'none',
     border: '0.5px solid rgba(255,255,255,0.22)',
     color: '#fff',
-    padding: '7px 14px',
+    padding: '5px 12px',
     borderRadius: 'var(--radius-sm)',
-    fontSize: 13,
+    fontSize: 11,
     fontFamily: 'var(--mono)',
     cursor: 'pointer',
     display: 'flex',
@@ -55,31 +55,15 @@ const styles = {
   },
 };
 
-export default function Topbar({ status, canRun, running, onRun }) {
+export default function Topbar({ status }) {
   return (
     <div style={styles.bar}>
       <div style={styles.brand}>
         <span style={styles.dot} />
         OMapMaker
-        <span style={styles.version}>v1.0</span>
+        <span style={styles.version}>v7</span>
       </div>
-
       <span style={styles.status}>{status}</span>
-
-      <div style={styles.actions}>
-        <button
-          style={{
-            ...styles.btn,
-            ...styles.btnPrimary,
-            ...(!canRun || running ? styles.btnDisabled : {}),
-          }}
-          onClick={onRun}
-          disabled={!canRun || running}
-          title="Spustit generování mapy"
-        >
-          {running ? '⏳ Zpracovávám...' : '▶ Generovat mapu'}
-        </button>
-      </div>
     </div>
   );
 }

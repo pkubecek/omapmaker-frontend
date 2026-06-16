@@ -4,8 +4,8 @@ import SettingsPanel from './components/SettingsPanel';
 import MapView from './components/MapView';
 import OutputPanel from './components/OutputPanel';
 import CuzkDownloader from './components/CuzkDownloader';
-import { startJob, getJobStatus } from './api';
 import HelpModal from './components/HelpModal';
+import { startJob, getJobStatus } from './api';
 
 const DEFAULT_SETTINGS = {
   crs: 'EPSG:5514',
@@ -58,11 +58,10 @@ export default function App() {
   const [bbox, setBbox] = useState(null);
   const [job, setJob] = useState({ status: 'idle', progress: 0, step: '', jobId: null });
   const [logLines, setLogLines] = useState([]);
-  const pollRef = useRef(null);
-
   const [showHelp, setShowHelp] = useState(
-  () => localStorage.getItem('omapmaker_help_seen') !== '1'
+    () => localStorage.getItem('omapmaker_help_seen') !== '1'
   );
+  const pollRef = useRef(null);
 
   const addLog = useCallback((msg, type = 'info') => {
     setLogLines((prev) => [...prev.slice(-199), { time: nowStr(), msg, type }]);
@@ -157,12 +156,7 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <Topbar
-        status={topStatus}
-        canRun={canRun}
-        running={running}
-        onRun={handleRun}
-      />
+      <Topbar status={topStatus} />
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <SettingsPanel
@@ -174,9 +168,10 @@ export default function App() {
 
         <MapView bbox={bbox} onBboxChange={setBbox} onCuzkComplete={handleCuzkComplete} onHelp={() => setShowHelp(true)} />
 
-        <OutputPanel job={job} logLines={logLines} />
+        <OutputPanel job={job} logLines={logLines} canRun={canRun} running={running} onRun={handleRun} />
       </div>
-      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}  
+
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
     </div>
   );
 }

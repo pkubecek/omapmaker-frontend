@@ -106,6 +106,31 @@ const S = {
   dlBtnDisabled: { opacity: 0.38, cursor: 'not-allowed' },
 };
 
+// Tlačítko Generovat mapu
+function RunBtn({ disabled, onClick, children }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: '100%', padding: '9px 0',
+        borderRadius: 'var(--radius-md)', border: 'none',
+        background: disabled ? 'var(--panel-border)' : hovered ? '#c05a2a' : 'var(--rock)',
+        color: disabled ? 'var(--text-muted)' : '#fff',
+        fontSize: 12, fontFamily: 'var(--sans)', fontWeight: 500,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'background 0.15s',
+        letterSpacing: '0.02em',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 // Tlačítko se stažením + hover efekt
 function DlBtn({ href, download, disabled, primary, children }) {
   const [hovered, setHovered] = useState(false);
