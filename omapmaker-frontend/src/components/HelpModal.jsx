@@ -9,12 +9,12 @@ const STEPS = [
   {
     icon: '📁',
     title: 'Nebo nahrajte vlastní soubory',
-    desc: 'Máte-li vlastní LiDAR data, přetáhněte je do levého panelu.Oba modely, DMR (digitální model reliéfu) a DMP (digitální model povrchu), musí být ve formátu .las, .laz. Aplikace nerozezná data DMR a DMP v jednom souboru',
+    desc: 'Máte-li vlastní LiDAR data, přetáhněte je do levého panelu.Oba modely, DMR (digitální model reliéfu) a DMP (digitální model povrchu), musí být ve formátu .las, .laz. Aplikace nerozezná data DMR a DMP v jednom souboru.',
   },
   {
     icon: '⚙',
     title: 'Nastavte parametry mapy',
-    desc: 'V levém panelu nastavte souřadnicový systém výstupu, měřítko (1:10 000 nebo 1:15 000), formát papíru (pokud chcete výstu primárně v PNG) a parametry zpracování. U každého parametru najdete nápovědu po najetí na ikonu ?',
+    desc: 'V levém panelu nastavte souřadnicový systém výstupu, měřítko (1:10 000 nebo 1:15 000), formát papíru (pokud chcete výstu primárně v PNG) a parametry zpracování. U každého parametru najdete nápovědu po najetí na ikonu "?"',
   },
   {
     icon: '▶',
@@ -32,7 +32,7 @@ const STEPS = [
     desc: (
         <>
         Pro přesnější výsledky je možné nahrát data ze ZABAGED®. Doporučení najdete {' '} <a href="https://www.geoinformatics.upol.cz/dprace/bakalarske/kubecek26/#vysledky" target="_blank" rel="noopener noreferrer"
-          style={{ color: '#5a9ab5' }}>zde</a>. Můžete také přidat vlastní ISOM vrstvy — název souboru musí odpovídat kódu symbolu (např. 502.shp pro silnice).,
+          style={{ color: '#5a9ab5' }}>zde</a>. Můžete také přidat vlastní vrstvy — název souboru musí odpovídat číslu symbolu (např. 301.shp pro Nepřekonatelné vodní těleso).
         </>
         )
     },
