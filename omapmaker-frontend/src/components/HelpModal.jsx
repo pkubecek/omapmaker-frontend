@@ -22,11 +22,6 @@ const STEPS = [
     desc: 'Klikněte na "Generovat mapu" v pravé liště. Zpracování trvá obvykle 3–15 minut podle velikosti oblasti. Průběh sledujte v pravém panelu.',
   },
   {
-    icon: '🗺',
-    title: 'Stáhněte výsledky',
-    desc: 'Po dokončení si stáhněte PNG mapu (500 DPI) nebo GPKG soubor, který je možné importovat do OpenOrienteering Mapperu pomocí CRT souboru, který stáhnete také v pravé liště',
-  },
-  {
     icon: '🌲',
     title: 'Volitelná ZABAGED® data',
     desc: (
@@ -35,7 +30,12 @@ const STEPS = [
           style={{ color: '#5a9ab5' }}>zde</a>. Můžete také přidat vlastní vrstvy — název souboru musí odpovídat číslu symbolu (např. 301.shp pro Nepřekonatelné vodní těleso).
         </>
         )
-    },
+  },
+  {
+    icon: '🗺',
+    title: 'Stáhněte výsledky',
+    desc: 'Po dokončení si stáhněte PNG mapu (500 DPI) nebo GPKG soubor, který je možné importovat do OpenOrienteering Mapperu pomocí CRT souboru, který stáhnete také v pravé liště',
+  },
     ];
         
 const S = {

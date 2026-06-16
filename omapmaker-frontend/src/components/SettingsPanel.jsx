@@ -182,7 +182,7 @@ const TOOLTIPS = {
   lidar: 'Nahrajte data ze zařízení nebo vyberte oblast tažením v mapě a stáhněte.',
   scale: 'Měřítko výsledné mapy. 1:10 000 pro detailní mapy, 1:15 000 pro větší oblasti.',
   paper: 'Formát výstupního PNG. "Extent dat" ořízne mapu přesně na rozsah dat.',
-  sigma: 'Míra vyhlazení vrstevnic. Vyšší hodnota = hladší vrstevnice, ale méně detailní. Doporučeno 5–8.',
+  sigma: 'Míra vyhlazení vrstevnic. Vyšší hodnota = hladší vrstevnice, ale méně detailní. Doporučeno 3–5.',
   slopeThreshold: 'Minimální sklon terénu (ve stupních) aby byl prvek klasifikován jako skála. Nižší = více skal, ale budou více splývat.',
   northRotation: 'Odchylka mag. severu od zvoleného souřadnicového systému.',
   bin1: 'Výška do které je vegetace považována za otevřený prostor (tráva, louka).',
@@ -421,7 +421,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
         <div style={S.row}>
           <span style={S.settingLabel}>Formát papíru</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Tooltip text={TOOLTIPS.paper} />
+            <Tooltip text={TOOLTIPS.paper} /> 
             <select style={S.select} value={settings.paper} onChange={(e) => set('paper', e.target.value)}>
               {PAPER_OPTIONS.map((o) => <option key={o}>{o}</option>)}
             </select>

@@ -81,7 +81,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) 
     if (leafletRef.current) return;
     const map = L.map(mapRef.current, { center: [49.8, 15.5], zoom: 7, zoomControl: true });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap', maxZoom: 19,
+      attribution: '© OpenStreetMap', maxZoom: 18,
     }).addTo(map);
     leafletRef.current = map;
     return () => { map.remove(); leafletRef.current = null; };
