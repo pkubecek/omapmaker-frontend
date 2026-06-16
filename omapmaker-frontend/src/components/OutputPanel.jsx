@@ -3,7 +3,7 @@ import { getPngUrl, getGpkgUrl } from '../api';
 
 const S = {
   panel: {
-    width: 350,
+    width: 288,
     flexShrink: 0,
     background: 'var(--panel-bg)',
     borderLeft: '0.5px solid var(--panel-border)',
@@ -178,7 +178,7 @@ const STATUS_LABELS = {
   error: 'Chyba!',
 };
 
-export default function OutputPanel({ job, logLines }) {
+export default function OutputPanel({ job, logLines, canRun, running, onRun }) {
   const logRef = useRef(null);
   const { status = 'idle', progress = 0, step = '', jobId = null } = job || {};
   const isDone = status === 'done';
@@ -198,6 +198,18 @@ export default function OutputPanel({ job, logLines }) {
 
   return (
     <div style={S.panel}>
+      {/* Generovat mapu */}
+      <div style={{ padding: '12px 16px', borderBottom: '0.5px solid var(--panel-border)' }}>
+        <RunBtn disabled={!canRun || running} onClick={onRun}>
+          {running ? '⏳ Zpracovávám...' : '▶ Generovat mapu'}
+        </RunBtn>
+        {!canRun && !running && (
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--mono)', marginTop: 5, textAlign: 'center' }}>
+            Nahrajte DTM a DSM
+          </div>
+        )}
+      </div>
+
       {/* Progress */}
       <div style={S.section}>
         <div style={S.sectionLabel}>Průběh zpracování</div>
