@@ -270,7 +270,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) 
             borderRadius: '50%',
             width: 26, height: 26, padding: 0,
             fontWeight: 600, fontSize: 13,
-            display: 'flex', alignItems: 'center', justifyContent: 'right',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}
           onClick={onHelp}
