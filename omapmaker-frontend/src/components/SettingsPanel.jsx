@@ -298,7 +298,7 @@ const LAYERS = [
   { key: 'roads', label: 'Cesty a silnice', color: '#f0b643' },
   { key: 'buildings', label: 'Budovy', color: '#2c2c2c' },
   { key: 'man_made', label: 'Umělé prvky', color: '#8060b0' },
-  { key: 'magnetic_lines', label: 'Mag. sever', color: '#7bc7e6' },
+  { key: 'magnetic_lines', label: 'Magnetické poledníky', color: '#7bc7e6' },
 ];
 
 function FileDropZone({ id, label, icon, accept, file, onFile, onRemove, colorStyle }) {
@@ -558,7 +558,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
           onChange={(e) => addFiles('zabaged', e.target.files)} />
 
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 6, marginTop: 8 }}>
-          Vlastní vrstvy (.shp)
+          Vlastní vrstvy (.shp) 
           <Tooltip text={TOOLTIPS.other} />
         </div>
         <div style={S.optionalListbox}>

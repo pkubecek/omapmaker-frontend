@@ -284,7 +284,7 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun, isM
 
         <DlBtn href={isDone && jobId ? getGpkgUrl(jobId) : undefined}
           download="OMap.gpkg" disabled={!isDone}>
-          ⬡ Exportovat GPKG pro OpenOrienteerinMapper
+          ↓ Exportovat GPKG pro OpenOrienteerinMapper
         </DlBtn>
 
         <DlBtn href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/isom.crt`}
