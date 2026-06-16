@@ -419,7 +419,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
           <div style={S.hint}>Vyberte oblast – nástroj Výběr oblasti</div>
         )}
         {tool === 'select' && !bbox && (
-          <div style={S.hint}>Táhněte myší pro výběr oblasti — pak stáhněte z ČÚZK nebo nahrajte vlastní data</div>
+          <div style={S.hint}>Táhněte myší pro výběr oblasti — pak stáhněte data a ta se sama nahrají jako vstupní</div>
         )}
       </div>
     </div>
