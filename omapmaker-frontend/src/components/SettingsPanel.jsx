@@ -179,18 +179,16 @@ const S = {
 };
 
 const TOOLTIPS = {
-  lidar: 'Nahrajte data ze zařízení nebo vyberte oblast tažením v mapě a stáhněte.',
+  crs: 'Souřadnicový systém vstupních dat. Pro ČR použijte S-JTSK (EPSG:5514).',
   scale: 'Měřítko výsledné mapy. 1:10 000 pro detailní mapy, 1:15 000 pro větší oblasti.',
   paper: 'Formát výstupního PNG. "Extent dat" ořízne mapu přesně na rozsah dat.',
-  sigma: 'Míra vyhlazení vrstevnic. Vyšší hodnota = hladší vrstevnice, ale méně detailní. Doporučeno 3–5.',
-  slopeThreshold: 'Minimální sklon terénu (ve stupních) aby byl prvek klasifikován jako skála. Nižší = více skal, ale budou více splývat.',
-  northRotation: 'Odchylka mag. severu od zvoleného souřadnicového systému.',
+  sigma: 'Míra vyhlazení vrstevnic. Vyšší hodnota = hladší vrstevnice, ale méně detail. Doporučeno 5–8.',
+  slopeThreshold: 'Minimální sklon terénu (ve stupních) aby byl prvek klasifikován jako skála. Nižší = více skal.',
+  northRotation: 'Magnetická deklinace pro čáry magnetického severu. Pro ČR přibližně 4–6°.',
   bin1: 'Výška do které je vegetace považována za otevřený prostor (tráva, louka).',
-  bin2: 'Výška do které je vegetace klasifikována jako znak (znak 410).',
-  bin3: 'Výška do které je vegetace klasifikována jako chůze (znak 408).',
-  bin4: 'Výška do které je vegetace klasifikována jako znak 406. Nad touto výškou = les (znak 405).',
-  zabaged: 'Nahrajte data veformátu .shp. Název souboru odpovídá názvu vrstvy v ZABAGED® (např. "LesniPudaSeStromy.shp")',
-  other: 'Jakákoliv jiná vrstva ve formátu .shp, která svýmnázvem odpovídá danému znaku (např. "301.shp")'
+  bin2: 'Výška do které je vegetace klasifikována jako boj (nízký keřový porost).',
+  bin3: 'Výška do které je vegetace klasifikována jako chůze (střední porost).',
+  bin4: 'Výška do které je vegetace klasifikována jako pomalý běh (vysoký porost). Nad touto výškou = les.',
 };
 
 // Tooltip komponent
@@ -279,6 +277,7 @@ function CollapsibleSection({ label, defaultOpen = false, children }) {
     </div>
   );
 }
+
 const CRS_OPTIONS = [
   { label: 'S-JTSK (ČR) EPSG:5514', value: 'EPSG:5514' },
   { label: 'UTM 33N EPSG:32633', value: 'EPSG:32633' },
@@ -297,7 +296,7 @@ const LAYERS = [
   { key: 'roads', label: 'Cesty a silnice', color: '#f0b643' },
   { key: 'buildings', label: 'Budovy', color: '#2c2c2c' },
   { key: 'man_made', label: 'Umělé prvky', color: '#8060b0' },
-  { key: 'magnetic_lines', label: 'Mag. poledníky', color: '#7bc7e6' },
+  { key: 'magnetic_lines', label: 'Mag. sever', color: '#7bc7e6' },
 ];
 
 function FileDropZone({ id, label, icon, accept, file, onFile, onRemove, colorStyle }) {
@@ -354,7 +353,7 @@ function Toggle({ on, onChange }) {
   );
 }
 
-export default function SettingsPanel({ settings, onSettings, files, onFiles }) {
+export default function SettingsPanel({ settings, onSettings, files, onFiles, isMobile }) {
   const zabRef = useRef();
   const isomRef = useRef();
 
@@ -372,12 +371,14 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
   };
 
   return (
-    <div style={S.panel}>
+    <div style={{
+      ...S.panel,
+      width: isMobile ? '100%' : 'clamp(260px, 22vw, 380px)',
+      ...(isMobile && { fontSize: 13 }),
+    }}>
       {/* LiDAR */}
-      <div style={S.section}>
-        <div style={S.label}>LiDAR data 
-        <Tooltip style={S.settingLabel} text={TOOLTIPS.lidar} />
-        </div>
+      <div style={{ ...S.section, padding: isMobile ? '16px' : '14px 16px' }}>
+        <div style={S.label}>LiDAR data</div>
         <FileDropZone
           label="Přetáhni nebo klikni pro DMR"
           icon="⛰️"
@@ -403,6 +404,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
         <div style={S.row}>
           <span style={S.settingLabel}>Souřadnicový systém</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Tooltip text={TOOLTIPS.crs} />
             <select style={S.select} value={settings.crs} onChange={(e) => set('crs', e.target.value)}>
               {CRS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
@@ -421,7 +423,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
         <div style={S.row}>
           <span style={S.settingLabel}>Formát papíru</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Tooltip text={TOOLTIPS.paper} /> 
+            <Tooltip text={TOOLTIPS.paper} />
             <select style={S.select} value={settings.paper} onChange={(e) => set('paper', e.target.value)}>
               {PAPER_OPTIONS.map((o) => <option key={o}>{o}</option>)}
             </select>
@@ -454,12 +456,11 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
       </div>
 
       {/* Vegetace */}
-      <CollapsibleSection label="Vegetace" defaultOpen={false}>
       <div style={S.section}>
         <div style={S.label}>Výška vegetace (m)</div>
         {[
           ['Otevřený prostor (do)', 'bin1'],
-          ['Prodírání (do)', 'bin2'],
+          ['Boj (do)', 'bin2'],
           ['Chůze (do)', 'bin3'],
           ['Pomalý běh (do)', 'bin4'],
         ].map(([lbl, key]) => (
@@ -473,10 +474,9 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
           </div>
         ))}
       </div>
-      </CollapsibleSection>
 
       {/* Mikrotvary — rozbalovací */}
-      <CollapsibleSection label="Tvary reliéfu" defaultOpen={false}>
+      <CollapsibleSection label="Mikrotvary terénu" defaultOpen={false}>
         <div style={{ ...S.label, marginBottom: 8 }}>Prohlubně</div>
         {[
           ['Min. průměr (m)', 'depMinDiameter', '0.5', '0.5', '50', 'Minimální průměr prohlubně v metrech. Menší objekty se ignorují.'],
@@ -527,9 +527,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
         <div style={S.label}>Volitelná vektorová data</div>
 
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 6 }}>
-          ZABAGED® (.shp) 
-          <Tooltip text={TOOLTIPS.zabaged} />
-
+          ZABAGED® (.shp)
         </div>
         <div style={S.optionalListbox}>
           {(files.zabaged || []).map((f, i) => (
@@ -555,8 +553,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
           onChange={(e) => addFiles('zabaged', e.target.files)} />
 
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 6, marginTop: 8 }}>
-          Vlastní vrstvy (.shp)
-          <Tooltip text={TOOLTIPS.other} />
+          Vlastní ISOM vrstvy (.shp — název = kód ISOM)
         </div>
         <div style={S.optionalListbox}>
           {(files.isom || []).map((f, i) => (

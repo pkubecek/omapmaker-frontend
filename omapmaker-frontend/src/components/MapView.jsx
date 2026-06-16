@@ -63,7 +63,7 @@ const S = {
 
 function fmtCoord(v) { return v.toFixed(4); }
 
-export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) {
+export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, isMobile }) {
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
   const rectRef = useRef(null);
@@ -118,12 +118,21 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) 
     let startLatLng = null;
     let tempRect = null;
 
+    // Pomocná funkce — převede touch pozici na LatLng
+    function touchToLatLng(touch) {
+      const rect = container.getBoundingClientRect();
+      const point = L.point(
+        touch.clientX - rect.left,
+        touch.clientY - rect.top
+      );
+      return map.containerPointToLatLng(point);
+    }
+
     function onMouseDown(e) {
       startLatLng = e.latlng;
       if (rectRef.current) { rectRef.current.remove(); rectRef.current = null; }
       if (tempRect) { tempRect.remove(); tempRect = null; }
       drawState.current.drawing = true;
-      // reset ČÚZK state při novém výběru
       setCuzkState('idle');
       setCuzkProgress(0);
       setCuzkMsg('');
@@ -154,13 +163,65 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) 
       startLatLng = null;
     }
 
+    // Touch handlery pro mobil
+    function onTouchStart(e) {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      const latlng = touchToLatLng(e.touches[0]);
+      if (rectRef.current) { rectRef.current.remove(); rectRef.current = null; }
+      if (tempRect) { tempRect.remove(); tempRect = null; }
+      startLatLng = latlng;
+      drawState.current.drawing = true;
+      setCuzkState('idle');
+      setCuzkProgress(0);
+      setCuzkMsg('');
+    }
+    function onTouchMove(e) {
+      if (!drawState.current.drawing || !startLatLng || e.touches.length !== 1) return;
+      e.preventDefault();
+      const latlng = touchToLatLng(e.touches[0]);
+      if (tempRect) tempRect.remove();
+      tempRect = L.rectangle([startLatLng, latlng], {
+        color: '#c96a3a', weight: 2, dashArray: '5 3', fillOpacity: 0.06,
+      }).addTo(map);
+    }
+    function onTouchEnd(e) {
+      if (!drawState.current.drawing || !startLatLng) return;
+      e.preventDefault();
+      drawState.current.drawing = false;
+      const lastTouch = e.changedTouches[0];
+      const latlng = touchToLatLng(lastTouch);
+      if (tempRect) { tempRect.remove(); tempRect = null; }
+      const b = {
+        min_lat: Math.min(startLatLng.lat, latlng.lat),
+        max_lat: Math.max(startLatLng.lat, latlng.lat),
+        min_lon: Math.min(startLatLng.lng, latlng.lng),
+        max_lon: Math.max(startLatLng.lng, latlng.lng),
+      };
+      if (b.max_lat - b.min_lat < 0.001 || b.max_lon - b.min_lon < 0.001) { startLatLng = null; return; }
+      rectRef.current = L.rectangle(
+        [[b.min_lat, b.min_lon], [b.max_lat, b.max_lon]],
+        { color: '#c96a3a', weight: 2, dashArray: '6 4', fillOpacity: 0.07 }
+      ).addTo(map);
+      onBboxChange(b);
+      startLatLng = null;
+    }
+
     map.on('mousedown', onMouseDown);
     map.on('mousemove', onMouseMove);
     map.on('mouseup', onMouseUp);
+    // Touch eventy přidáme přímo na container (ne přes Leaflet)
+    container.addEventListener('touchstart', onTouchStart, { passive: false });
+    container.addEventListener('touchmove', onTouchMove, { passive: false });
+    container.addEventListener('touchend', onTouchEnd, { passive: false });
+
     return () => {
       map.off('mousedown', onMouseDown);
       map.off('mousemove', onMouseMove);
       map.off('mouseup', onMouseUp);
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
       if (tempRect) tempRect.remove();
       container.style.cursor = '';
       map.dragging.enable();
@@ -244,20 +305,35 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) 
   return (
     <div style={S.wrap}>
       {/* Toolbar */}
-      <div style={S.toolbar}>
+      <div style={{
+        ...S.toolbar,
+        padding: isMobile ? '6px 8px' : '8px 12px',
+        gap: isMobile ? 4 : 6,
+      }}>
         <button
-          style={{ ...S.toolBtn, ...(tool === 'pan' ? S.toolBtnActive : {}) }}
+          style={{
+            ...S.toolBtn, ...(tool === 'pan' ? S.toolBtnActive : {}),
+            padding: isMobile ? '6px 8px' : '4px 10px',
+            fontSize: isMobile ? 12 : 11,
+          }}
           onClick={() => setTool('pan')}
-        >✋ Posun</button>
+        >{isMobile ? '✋' : '✋ Posun'}</button>
         <button
-          style={{ ...S.toolBtn, ...(tool === 'select' ? S.toolBtnActive : {}) }}
+          style={{
+            ...S.toolBtn, ...(tool === 'select' ? S.toolBtnActive : {}),
+            padding: isMobile ? '6px 8px' : '4px 10px',
+            fontSize: isMobile ? 12 : 11,
+          }}
           onClick={() => setTool('select')}
-        >⬜ Výběr oblasti</button>
+        >{isMobile ? '⬜' : '⬜ Výběr oblasti'}</button>
         <div style={S.divider} />
         {bbox && (
-          <button style={S.toolBtn} onClick={clearBbox}>× Zrušit</button>
+          <button style={{
+            ...S.toolBtn,
+            padding: isMobile ? '6px 8px' : '4px 10px',
+          }} onClick={clearBbox}>×</button>
         )}
-        {bboxLabel && (
+        {bboxLabel && !isMobile && (
           <span style={S.bboxInfo}>
             {bboxLabel}
             {kmLat && <span style={{ marginLeft: 6, color: 'var(--text-muted)' }}>~{kmLat}×{kmLon} km</span>}
@@ -268,21 +344,43 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) 
             ...S.toolBtn,
             marginLeft: 'auto',
             borderRadius: '50%',
-            width: 26, height: 26, padding: 0,
-            fontWeight: 600, fontSize: 13,
+            width: isMobile ? 32 : 26, height: isMobile ? 32 : 26, padding: 0,
+            fontWeight: 600, fontSize: isMobile ? 15 : 13,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}
           onClick={onHelp}
           title="Nápověda — Jak na to?"
         >?</button>
+        <button
+          style={{
+            ...S.toolBtn,
+            marginLeft: 'auto',
+            width: 26, height: 26, padding: 0,
+            borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 500, fontSize: 12,
+          }}
+          onClick={onHelp}
+          title="Jak na to?"
+        >?</button>
       </div>
 
       {/* ČÚZK inline panel — zobrazí se po výběru oblasti */}
       {bbox && (
-        <div style={S.cuzkPanel}>
-          <span style={S.cuzkLabel}>Stáhnout z ČÚZK:</span>
-          <select
+        <div style={{
+          ...S.cuzkPanel,
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: isMobile ? 6 : 8,
+          padding: isMobile ? '8px 12px' : '6px 12px',
+        }}>
+          {isMobile && bboxLabel && (
+            <span style={{ ...S.cuzkLabel, fontSize: 9 }}>{bboxLabel}</span>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={S.cuzkLabel}>Stáhnout z ČÚZK:</span>
+            <select
             style={S.cuzkSelect}
             value={dsmType}
             onChange={(e) => setDsmType(e.target.value)}
@@ -291,9 +389,14 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) 
             <option value="DMPOK">DMP OK (doporučeno)</option>
             <option value="DMP1G">DMP 1G</option>
           </select>
+          </div>
 
           {cuzkState === 'idle' && (
-            <button style={S.cuzkBtn} onClick={handleCuzkDownload}>
+            <button style={{
+              ...S.cuzkBtn,
+              width: isMobile ? '100%' : 'auto',
+              padding: isMobile ? '8px 12px' : '5px 12px',
+            }} onClick={handleCuzkDownload}>
               ↓ Stáhnout DMR + DMP
             </button>
           )}
@@ -303,12 +406,12 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) 
               <div style={S.cuzkBarWrap}>
                 <div style={{ ...S.cuzkBarFill, width: `${cuzkProgress}%` }} />
               </div>
-              <span style={S.cuzkMsg}>{cuzkMsg}</span>
+              <span style={{ ...S.cuzkMsg, whiteSpace: isMobile ? 'normal' : 'nowrap' }}>{cuzkMsg}</span>
             </div>
           )}
 
           {cuzkState === 'done' && (
-            <span style={{ ...S.cuzkMsg, color: 'var(--forest)' }}>✓ Staženo — soubory nastaveny jako vstup</span>
+            <span style={{ ...S.cuzkMsg, color: 'var(--forest)' }}>✓ Staženo</span>
           )}
 
           {cuzkState === 'error' && (
@@ -322,12 +425,9 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) 
         </div>
       )}
 
-       {/* Mapa */}
+      {/* Mapa */}
       <div style={S.mapContainer}>
         <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
-        {tool === 'pan' && !bbox && (
-          <div style={S.hint}>Vyberte oblast – nástroj Výběr oblasti</div>
-        )}
         {tool === 'select' && !bbox && (
           <div style={S.hint}>Táhněte myší pro výběr oblasti — pak stáhněte z ČÚZK nebo nahrajte vlastní data</div>
         )}

@@ -5,7 +5,7 @@ const S = {
   drawer: (open) => ({
     position: 'absolute',
     left: 0, top: 0, bottom: 0,
-    width: 300,
+    width: 'clamp(260px, 30vw, 360px)',
     zIndex: 200,
     transform: open ? 'translateX(0)' : 'translateX(-100%)',
     transition: 'transform 0.25s ease',
@@ -51,7 +51,7 @@ export default function TabletLayout({ settingsPane, mapPane, outputPane }) {
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {mapPane}
         </div>
-        <div style={{ width: 280, flexShrink: 0, overflow: 'auto', borderLeft: '0.5px solid var(--panel-border)' }}>
+        <div style={{ width: 'clamp(220px, 25vw, 300px)', flexShrink: 0, overflow: 'auto', borderLeft: '0.5px solid var(--panel-border)' }}>
           {outputPane}
         </div>
       </div>

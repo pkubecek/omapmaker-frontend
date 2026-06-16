@@ -178,7 +178,7 @@ const STATUS_LABELS = {
   error: 'Chyba!',
 };
 
-export default function OutputPanel({ job, logLines, canRun, running, onRun }) {
+export default function OutputPanel({ job, logLines, canRun, running, onRun, isMobile }) {
   const logRef = useRef(null);
   const { status = 'idle', progress = 0, step = '', jobId = null } = job || {};
   const isDone = status === 'done';
@@ -189,6 +189,11 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun }) {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [logLines]);
 
+  const panelStyle = {
+    ...S.panel,
+    width: isMobile ? '100%' : 'clamp(240px, 20vw, 320px)',
+  };
+
   const now = () => {
     const d = new Date();
     return [d.getHours(), d.getMinutes(), d.getSeconds()]
@@ -197,7 +202,7 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun }) {
   };
 
   return (
-    <div style={S.panel}>
+    <div style={panelStyle}>
       {/* Generovat mapu */}
       <div style={{ padding: '12px 16px', borderBottom: '0.5px solid var(--panel-border)' }}>
         <RunBtn disabled={!canRun || running} onClick={onRun}>
@@ -205,7 +210,7 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun }) {
         </RunBtn>
         {!canRun && !running && (
           <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--mono)', marginTop: 5, textAlign: 'center' }}>
-            Nahrajte DMR a DMP
+            Nahrajte DTM a DSM
           </div>
         )}
       </div>
@@ -228,7 +233,7 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun }) {
         </div>
         <div style={S.stepText}>
           {status === 'idle'
-            ? 'Nahrajte DMR a DMP, pak klikněte Generovat mapu'
+            ? 'Nahrajte DTM a DSM, pak klikněte Generovat mapu'
             : step || '—'}
         </div>
       </div>
@@ -279,12 +284,12 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun }) {
 
         <DlBtn href={isDone && jobId ? getGpkgUrl(jobId) : undefined}
           download="OMap.gpkg" disabled={!isDone}>
-          ↓ Exportovat GPKG pro OpenOrienteeringMapper
+          ⬡ Exportovat GPKG pro OOM
         </DlBtn>
 
-        <DlBtn href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/OMapMaker-OpenOrienteeringMapper.crt`}
+        <DlBtn href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/isom.crt`}
           download="isom.crt">
-          ↓ Stáhnout CRT soubor
+          ⬇ Stáhnout isom.crt (OOM styl)
         </DlBtn>
       </div>
     </div>
