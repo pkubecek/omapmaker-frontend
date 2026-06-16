@@ -343,19 +343,6 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
           style={{
             ...S.toolBtn,
             marginLeft: 'auto',
-            borderRadius: '50%',
-            width: isMobile ? 32 : 26, height: isMobile ? 32 : 26, padding: 0,
-            fontWeight: 600, fontSize: isMobile ? 15 : 13,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}
-          onClick={onHelp}
-          title="Nápověda — Jak na to?"
-        >?</button>
-        <button
-          style={{
-            ...S.toolBtn,
-            marginLeft: 'auto',
             width: 26, height: 26, padding: 0,
             borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
