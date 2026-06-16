@@ -173,6 +173,18 @@ export default function App() {
     setFiles(prev => ({ ...prev, dtm: dmrFile, dsm: dmpFile }));
   }, [addLog]);
 
+  const canRun = Boolean(files.dtm && files.dsm);
+  const running = job.status === 'running' || job.status === 'queued';
+
+  let topStatus = 'Připraveno';
+  if (!files.dtm && !files.dsm) topStatus = 'Nahrajte DTM a DSM';
+  else if (!files.dtm) topStatus = 'Chybí DTM';
+  else if (!files.dsm) topStatus = 'Chybí DSM';
+  else if (running) topStatus = 'Zpracovávám...';
+  else if (job.status === 'done') topStatus = 'Mapa vygenerována ✓';
+  else if (job.status === 'error') topStatus = 'Chyba!';
+  else topStatus = 'Připraveno ke spuštění';
+
   const { isMobile, isTablet } = useBreakpoint();
 
   const settingsPane = (
@@ -181,6 +193,7 @@ export default function App() {
       onSettings={setSettings}
       files={files}
       onFiles={setFiles}
+      isMobile={isMobile}
     />
   );
 
@@ -190,6 +203,7 @@ export default function App() {
       onBboxChange={setBbox}
       onCuzkComplete={handleCuzkComplete}
       onHelp={() => setShowHelp(true)}
+      isMobile={isMobile}
     />
   );
 
@@ -200,12 +214,13 @@ export default function App() {
       canRun={canRun}
       running={running}
       onRun={handleRun}
+      isMobile={isMobile}
     />
   );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <Topbar status={topStatus} />
+      <Topbar status={topStatus} isMobile={isMobile} />
 
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         {isMobile ? (
@@ -229,7 +244,7 @@ export default function App() {
         )}
       </div>
 
-      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} isMobile={isMobile} />}
     </div>
   );
 }
