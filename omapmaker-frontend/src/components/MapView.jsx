@@ -270,23 +270,11 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) 
             borderRadius: '50%',
             width: 26, height: 26, padding: 0,
             fontWeight: 600, fontSize: 13,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            display: 'flex', alignItems: 'center', justifyContent: 'right',
             flexShrink: 0,
           }}
           onClick={onHelp}
           title="Nápověda — Jak na to?"
-        >?</button>
-        <button
-          style={{
-            ...S.toolBtn,
-            marginLeft: 'auto',
-            width: 26, height: 26, padding: 0,
-            borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 500, fontSize: 12,
-          }}
-          onClick={onHelp}
-          title="Jak na to?"
         >?</button>
       </div>
 
