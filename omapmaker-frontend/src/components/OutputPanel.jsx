@@ -279,17 +279,17 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun, isM
 
         <DlBtn href={isDone && jobId ? getPngUrl(jobId) : undefined}
           download="OMap.png" disabled={!isDone} primary>
-          ↓ Stáhnout mapu PNG
+          ↓ Stáhnout mapu v PNG
         </DlBtn>
 
         <DlBtn href={isDone && jobId ? getGpkgUrl(jobId) : undefined}
           download="OMap.gpkg" disabled={!isDone}>
-          ⬡ Exportovat GPKG pro OOM
+          ⬡ Exportovat GPKG pro OpenOrienteerinMapper
         </DlBtn>
 
         <DlBtn href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/isom.crt`}
           download="isom.crt">
-          ⬇ Stáhnout isom.crt (OOM styl)
+          ↓ Stáhnout CRT soubor
         </DlBtn>
       </div>
     </div>
