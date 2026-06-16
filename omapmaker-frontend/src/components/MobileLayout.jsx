@@ -12,11 +12,14 @@ const S = {
     flexDirection: 'column',
     height: '100%',
     overflow: 'hidden',
+    position: 'absolute',
+    inset: 0,
   },
   content: {
     flex: 1,
     overflow: 'hidden',
     position: 'relative',
+    minHeight: 0,
   },
   pane: (visible) => ({
     position: 'absolute',
@@ -31,6 +34,7 @@ const S = {
     background: 'var(--panel-bg)',
     flexShrink: 0,
     height: 56,
+    paddingBottom: 'env(safe-area-inset-bottom)',
   },
   tab: (active) => ({
     flex: 1,
@@ -47,8 +51,9 @@ const S = {
     color: active ? 'var(--rock)' : 'var(--text-muted)',
     borderTop: active ? '2px solid var(--rock)' : '2px solid transparent',
     transition: 'color 0.15s',
+    WebkitTapHighlightColor: 'transparent',
   }),
-  tabIcon: { fontSize: 18, lineHeight: 1 },
+  tabIcon: { fontSize: 20, lineHeight: 1 },
 };
 
 export default function MobileLayout({ settingsPane, mapPane, outputPane }) {

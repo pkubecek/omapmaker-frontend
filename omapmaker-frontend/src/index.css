@@ -28,11 +28,17 @@
   --radius-lg: 12px;
 }
 
-html, body, #root {
+html, body {
   height: 100%;
   font-family: var(--sans);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Leaflet overrides */
@@ -43,6 +49,16 @@ html, body, #root {
 
 .leaflet-control-zoom a {
   font-family: var(--sans) !important;
+}
+
+/* Mobile touch targets */
+@media (max-width: 768px) {
+  .leaflet-control-zoom a {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    font-size: 18px !important;
+  }
 }
 
 /* Custom scrollbar */
