@@ -210,7 +210,7 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun, isM
         </RunBtn>
         {!canRun && !running && (
           <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--mono)', marginTop: 5, textAlign: 'center' }}>
-            Nahrajte DTM a DSM
+            Nahrajte DMR a DMP
           </div>
         )}
       </div>
@@ -233,7 +233,7 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun, isM
         </div>
         <div style={S.stepText}>
           {status === 'idle'
-            ? 'Nahrajte DTM a DSM, pak klikněte Generovat mapu'
+            ? 'Nahrajte DMR a DMP, pak klikněte Generovat mapu'
             : step || '—'}
         </div>
       </div>

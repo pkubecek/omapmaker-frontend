@@ -168,8 +168,8 @@ export default function App() {
   }, [files, settings, bbox, addLog, pollJob]);
 
   const handleCuzkComplete = useCallback((dmrFile, dmpFile) => {
-    addLog(`DTM načteno: ${dmrFile.name} (${(dmrFile.size / 1e6).toFixed(1)} MB)`, 'ok');
-    addLog(`DSM načteno: ${dmpFile.name} (${(dmpFile.size / 1e6).toFixed(1)} MB)`, 'ok');
+    addLog(`DMR načteno: ${dmrFile.name} (${(dmrFile.size / 1e6).toFixed(1)} MB)`, 'ok');
+    addLog(`DMP načteno: ${dmpFile.name} (${(dmpFile.size / 1e6).toFixed(1)} MB)`, 'ok');
     setFiles(prev => ({ ...prev, dtm: dmrFile, dsm: dmpFile }));
   }, [addLog]);
 
@@ -177,9 +177,9 @@ export default function App() {
   const running = job.status === 'running' || job.status === 'queued';
 
   let topStatus = 'Připraveno';
-  if (!files.dtm && !files.dsm) topStatus = 'Nahrajte DTM a DSM';
-  else if (!files.dtm) topStatus = 'Chybí DTM';
-  else if (!files.dsm) topStatus = 'Chybí DSM';
+  if (!files.dtm && !files.dsm) topStatus = 'Nahrajte DMR a DMP';
+  else if (!files.dtm) topStatus = 'Chybí DMR';
+  else if (!files.dsm) topStatus = 'Chybí DMP';
   else if (running) topStatus = 'Zpracovávám...';
   else if (job.status === 'done') topStatus = 'Mapa vygenerována ✓';
   else if (job.status === 'error') topStatus = 'Chyba!';
