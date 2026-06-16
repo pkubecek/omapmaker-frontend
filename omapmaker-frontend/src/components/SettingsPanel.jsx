@@ -246,6 +246,39 @@ function Tooltip({ text }) {
   );
 }
 
+function CollapsibleSection({ label, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div style={{ borderBottom: '0.5px solid var(--panel-border)' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          width: '100%', padding: '12px 16px', background: 'none', border: 'none',
+          cursor: 'pointer', textAlign: 'left',
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.background = '#f5f4f0'}
+        onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+      >
+        <span style={{
+          fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 500,
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          color: 'var(--text-secondary)',
+        }}>{label}</span>
+        <span style={{
+          fontSize: 10, color: 'var(--text-muted)',
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.2s', display: 'inline-block',
+        }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ padding: '0 16px 14px' }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
 const CRS_OPTIONS = [
   { label: 'S-JTSK (ČR) EPSG:5514', value: 'EPSG:5514' },
   { label: 'UTM 33N EPSG:32633', value: 'EPSG:32633' },
