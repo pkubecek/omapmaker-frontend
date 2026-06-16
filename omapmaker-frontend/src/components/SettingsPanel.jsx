@@ -440,6 +440,41 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles }) 
         ))}
       </div>
 
+      {/* Mikrotvary — rozbalovací */}
+      <CollapsibleSection label="Prohlubně a kupky" defaultOpen={false}>
+        <div style={{ ...S.label, marginBottom: 8 }}>Prohlubně</div>
+        {[
+          ['Min. průměr (m)', 'depMinDiameter', '0.5', '0.5', '50', 'Minimální průměr prohlubně v metrech. Menší objekty se ignorují.'],
+          ['Max. průměr (m)', 'depMaxDiameter', '0.5', '0.5', '50', 'Maximální průměr prohlubně. Větší objekty se ignorují.'],
+          ['Min. hloubka (m)', 'depMinDepth', '0.1', '0.1', '10', 'Minimální hloubka prohlubně v metrech.'],
+        ].map(([lbl, key, step, min, max, tip]) => (
+          <div style={S.row} key={key}>
+            <span style={S.settingLabel}>{lbl}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Tooltip text={tip} />
+              <input style={S.numInput} type="number" step={step} min={min} max={max}
+                value={settings[key]} onChange={(e) => set(key, e.target.value)} />
+            </div>
+          </div>
+        ))}
+
+        <div style={{ ...S.label, marginTop: 12, marginBottom: 8 }}>Kupky</div>
+        {[
+          ['Min. průměr (m)', 'knoMinDiameter', '0.5', '0.5', '50', 'Minimální průměr kupky v metrech.'],
+          ['Max. průměr (m)', 'knoMaxDiameter', '0.5', '0.5', '50', 'Maximální průměr kupky. Větší kopce se ignorují.'],
+          ['Min. výška (m)', 'knoMinHeight', '0.1', '0.1', '10', 'Minimální výška kupky nad okolním terénem.'],
+        ].map(([lbl, key, step, min, max, tip]) => (
+          <div style={S.row} key={key}>
+            <span style={S.settingLabel}>{lbl}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Tooltip text={tip} />
+              <input style={S.numInput} type="number" step={step} min={min} max={max}
+                value={settings[key]} onChange={(e) => set(key, e.target.value)} />
+            </div>
+          </div>
+        ))}
+      </CollapsibleSection>
+
       {/* Vrstvy */}
       <div style={S.section}>
         <div style={S.label}>Vrstvy</div>

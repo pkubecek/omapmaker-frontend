@@ -18,6 +18,14 @@ const DEFAULT_SETTINGS = {
   bin2: '2',
   bin3: '6',
   bin4: '12',
+  // Prohlubně
+  depMinDiameter: '2',
+  depMaxDiameter: '5',
+  depMinDepth: '0.7',
+  // Kupky
+  knoMinDiameter: '1.5',
+  knoMaxDiameter: '10',
+  knoMinHeight: '0.5',
   layers: {
     contours: true,
     rocks: true,
@@ -120,6 +128,26 @@ export default function App() {
         parseFloat(settings.bin3),
         parseFloat(settings.bin4),
       ],
+      depressions: {
+        min_diameter: parseFloat(settings.depMinDiameter),
+        max_diameter: parseFloat(settings.depMaxDiameter),
+        min_depth: parseFloat(settings.depMinDepth),
+      },
+      knolls: {
+        min_diameter: parseFloat(settings.knoMinDiameter),
+        max_diameter: parseFloat(settings.knoMaxDiameter),
+        min_height: parseFloat(settings.knoMinHeight),
+      },
+      depressions: {
+        min_diameter: parseFloat(settings.depMinDiameter),
+        max_diameter: parseFloat(settings.depMaxDiameter),
+        min_depth: parseFloat(settings.depMinDepth),
+      },
+      knolls: {
+        min_diameter: parseFloat(settings.knoMinDiameter),
+        max_diameter: parseFloat(settings.knoMaxDiameter),
+        min_height: parseFloat(settings.knoMinHeight),
+      },
       layers: settings.layers,
       bbox: bbox || null,
     };
