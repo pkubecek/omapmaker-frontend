@@ -2,37 +2,42 @@ import React, { useState } from 'react';
 
 const STEPS = [
   {
-    icon: '⬇',
+    icon: '↓',
     title: 'Stáhněte LiDAR data z ČÚZK',
     desc: 'V mapovém okně vyberte oblast nástrojem "Výběr oblasti" — táhněte myší. Pod mapou se zobrazí panel pro stažení DMR a DMP dat přímo z ČÚZK. Stahování trvá několik minut podle velikosti oblasti.',
   },
   {
     icon: '📁',
     title: 'Nebo nahrajte vlastní soubory',
-    desc: 'Máte-li vlastní LiDAR data, přetáhněte je do levého panelu. DTM (digitální model terénu) ve formátu .las nebo .laz, DSM (model povrchu) ve formátu .las, .laz nebo .tif.',
+    desc: 'Máte-li vlastní LiDAR data, přetáhněte je do levého panelu.Oba modely, DMR (digitální model reliéfu) a DMP (digitální model povrchu), musí být ve formátu .las, .laz. Aplikace nerozezná data DMR a DMP v jednom souboru',
   },
   {
     icon: '⚙',
     title: 'Nastavte parametry mapy',
-    desc: 'V levém panelu nastavte souřadnicový systém (pro ČR EPSG:5514), měřítko (1:10 000 nebo 1:15 000), formát papíru a parametry zpracování. U každého parametru najdete nápovědu po najetí na ikonu ?',
+    desc: 'V levém panelu nastavte souřadnicový systém výstupu, měřítko (1:10 000 nebo 1:15 000), formát papíru (pokud chcete výstu primárně v PNG) a parametry zpracování. U každého parametru najdete nápovědu po najetí na ikonu ?',
   },
   {
     icon: '▶',
     title: 'Generujte mapu',
-    desc: 'Klikněte na "Generovat mapu" v horní liště. Zpracování trvá obvykle 5–20 minut podle velikosti oblasti. Průběh sledujte v pravém panelu.',
+    desc: 'Klikněte na "Generovat mapu" v pravé liště. Zpracování trvá obvykle 3–15 minut podle velikosti oblasti. Průběh sledujte v pravém panelu.',
   },
   {
     icon: '🗺',
     title: 'Stáhněte výsledky',
-    desc: 'Po dokončení si stáhněte PNG mapu (1000 DPI) nebo GPKG soubor pro OpenOrienteering Mapper. Soubor isom.crt obsahuje barevnou tabulku pro import do OOM.',
+    desc: 'Po dokončení si stáhněte PNG mapu (500 DPI) nebo GPKG soubor, který je možné importovat do OpenOrienteering Mapperu pomocí CRT souboru, který stáhnete také v pravé liště',
   },
   {
     icon: '🌲',
     title: 'Volitelná ZABAGED® data',
-    desc: 'Pro přesnější výsledky nahrajte ZABAGED® shapefily (silnice, vodní toky, budovy). Můžete také přidat vlastní ISOM vrstvy — název souboru musí odpovídat kódu symbolu (např. 502.shp pro silnice).',
-  },
-];
-
+    desc: (
+        <>
+        Pro přesnější výsledky je možné nahrát data ze ZABAGED®. Doporučení najdete {' '} <a href="https://www.geoinformatics.upol.cz/dprace/bakalarske/kubecek26/#vysledky" target="_blank" rel="noopener noreferrer"
+          style={{ color: '#5a9ab5' }}>zde</a>. Můžete také přidat vlastní ISOM vrstvy — název souboru musí odpovídat kódu symbolu (např. 502.shp pro silnice).,
+        </>
+        )
+    },
+    ];
+        
 const S = {
   overlay: {
     position: 'fixed', inset: 0,
@@ -129,7 +134,7 @@ export default function HelpModal({ onClose }) {
             <span style={S.dot} />
             <div>
               <div style={S.title}>Jak na to?</div>
-              <div style={S.subtitle}>OMapMaker · generátor orientačních map</div>
+              <div style={S.subtitle}>Generování map pro OB</div>
             </div>
           </div>
           <button style={S.closeBtn} onClick={handleClose}>×</button>
