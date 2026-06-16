@@ -5,6 +5,7 @@ import MapView from './components/MapView';
 import OutputPanel from './components/OutputPanel';
 import CuzkDownloader from './components/CuzkDownloader';
 import { startJob, getJobStatus } from './api';
+import HelpModal from './components/HelpModal';
 
 const DEFAULT_SETTINGS = {
   crs: 'EPSG:5514',
@@ -58,6 +59,10 @@ export default function App() {
   const [job, setJob] = useState({ status: 'idle', progress: 0, step: '', jobId: null });
   const [logLines, setLogLines] = useState([]);
   const pollRef = useRef(null);
+
+  const [showHelp, setShowHelp] = useState(
+  () => localStorage.getItem('omapmaker_help_seen') !== '1'
+  );
 
   const addLog = useCallback((msg, type = 'info') => {
     setLogLines((prev) => [...prev.slice(-199), { time: nowStr(), msg, type }]);
@@ -167,10 +172,11 @@ export default function App() {
           onFiles={setFiles}
         />
 
-        <MapView bbox={bbox} onBboxChange={setBbox} onCuzkComplete={handleCuzkComplete} />
+        <MapView bbox={bbox} onBboxChange={setBbox} onCuzkComplete={handleCuzkComplete} onHelp={() => setShowHelp(true)} />
 
         <OutputPanel job={job} logLines={logLines} />
       </div>
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}  
     </div>
   );
 }

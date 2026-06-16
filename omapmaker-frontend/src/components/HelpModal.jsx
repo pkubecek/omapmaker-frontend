@@ -1,0 +1,179 @@
+import React, { useState } from 'react';
+
+const STEPS = [
+  {
+    icon: '⬇',
+    title: 'Stáhněte LiDAR data z ČÚZK',
+    desc: 'V mapovém okně vyberte oblast nástrojem "Výběr oblasti" — táhněte myší. Pod mapou se zobrazí panel pro stažení DMR a DMP dat přímo z ČÚZK. Stahování trvá několik minut podle velikosti oblasti.',
+  },
+  {
+    icon: '📁',
+    title: 'Nebo nahrajte vlastní soubory',
+    desc: 'Máte-li vlastní LiDAR data, přetáhněte je do levého panelu. DTM (digitální model terénu) ve formátu .las nebo .laz, DSM (model povrchu) ve formátu .las, .laz nebo .tif.',
+  },
+  {
+    icon: '⚙',
+    title: 'Nastavte parametry mapy',
+    desc: 'V levém panelu nastavte souřadnicový systém (pro ČR EPSG:5514), měřítko (1:10 000 nebo 1:15 000), formát papíru a parametry zpracování. U každého parametru najdete nápovědu po najetí na ikonu ?',
+  },
+  {
+    icon: '▶',
+    title: 'Generujte mapu',
+    desc: 'Klikněte na "Generovat mapu" v horní liště. Zpracování trvá obvykle 5–20 minut podle velikosti oblasti. Průběh sledujte v pravém panelu.',
+  },
+  {
+    icon: '🗺',
+    title: 'Stáhněte výsledky',
+    desc: 'Po dokončení si stáhněte PNG mapu (1000 DPI) nebo GPKG soubor pro OpenOrienteering Mapper. Soubor isom.crt obsahuje barevnou tabulku pro import do OOM.',
+  },
+  {
+    icon: '🌲',
+    title: 'Volitelná ZABAGED® data',
+    desc: 'Pro přesnější výsledky nahrajte ZABAGED® shapefily (silnice, vodní toky, budovy). Můžete také přidat vlastní ISOM vrstvy — název souboru musí odpovídat kódu symbolu (např. 502.shp pro silnice).',
+  },
+];
+
+const S = {
+  overlay: {
+    position: 'fixed', inset: 0,
+    background: 'rgba(26,31,46,0.6)',
+    zIndex: 9999,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  modal: {
+    background: '#fff',
+    borderRadius: 12,
+    width: 580,
+    maxWidth: '95vw',
+    maxHeight: '90vh',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    boxShadow: '0 12px 48px rgba(0,0,0,0.2)',
+  },
+  header: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '18px 24px 14px',
+    borderBottom: '0.5px solid #e2ddd3',
+    background: '#1a1f2e',
+    color: '#fff',
+  },
+  headerLeft: { display: 'flex', alignItems: 'center', gap: 10 },
+  dot: { width: 8, height: 8, borderRadius: '50%', background: '#c96a3a', flexShrink: 0 },
+  title: { fontFamily: 'IBM Plex Mono, monospace', fontSize: 14, fontWeight: 500, letterSpacing: '0.04em' },
+  subtitle: { fontSize: 11, opacity: 0.5, fontFamily: 'IBM Plex Mono, monospace', marginTop: 2 },
+  closeBtn: {
+    background: 'none', border: 'none', color: '#fff',
+    fontSize: 20, cursor: 'pointer', opacity: 0.6, lineHeight: 1,
+    padding: '2px 6px',
+  },
+  body: { overflowY: 'auto', padding: '20px 24px 24px' },
+  stepsGrid: {
+    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14,
+  },
+  step: {
+    display: 'flex', gap: 12, padding: '14px',
+    borderRadius: 8, background: '#fafaf8',
+    border: '0.5px solid #e2ddd3',
+  },
+  stepIcon: {
+    fontSize: 22, flexShrink: 0, width: 36, height: 36,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: '#f0ead6', borderRadius: 8,
+  },
+  stepNum: {
+    fontFamily: 'IBM Plex Mono, monospace', fontSize: 9,
+    color: '#c96a3a', fontWeight: 500, letterSpacing: '0.06em',
+    marginBottom: 3,
+  },
+  stepTitle: { fontSize: 12, fontWeight: 500, marginBottom: 5, color: '#1a1f2e' },
+  stepDesc: { fontSize: 11, color: '#6b7280', lineHeight: 1.55 },
+  footer: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '12px 24px',
+    borderTop: '0.5px solid #e2ddd3',
+    background: '#fafaf8',
+  },
+  checkLabel: {
+    display: 'flex', alignItems: 'center', gap: 6,
+    fontSize: 11, color: '#6b7280', cursor: 'pointer',
+  },
+  startBtn: {
+    padding: '8px 20px', borderRadius: 6, border: 'none',
+    background: '#1a1f2e', color: '#fff',
+    fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+    transition: 'background 0.15s',
+  },
+  tipBox: {
+    marginTop: 14, padding: '10px 14px',
+    background: '#f3f8fb', border: '0.5px solid #c8e0ec',
+    borderRadius: 8, fontSize: 11, color: '#5a9ab5', lineHeight: 1.5,
+  },
+};
+
+export default function HelpModal({ onClose }) {
+  const [dontShow, setDontShow] = useState(false);
+
+  const handleClose = () => {
+    if (dontShow) {
+      localStorage.setItem('omapmaker_help_seen', '1');
+    }
+    onClose();
+  };
+
+  return (
+    <div style={S.overlay} onClick={(e) => e.target === e.currentTarget && handleClose()}>
+      <div style={S.modal}>
+        <div style={S.header}>
+          <div style={S.headerLeft}>
+            <span style={S.dot} />
+            <div>
+              <div style={S.title}>Jak na to?</div>
+              <div style={S.subtitle}>OMapMaker · generátor orientačních map</div>
+            </div>
+          </div>
+          <button style={S.closeBtn} onClick={handleClose}>×</button>
+        </div>
+
+        <div style={S.body}>
+          <div style={S.stepsGrid}>
+            {STEPS.map((step, i) => (
+              <div style={S.step} key={i}>
+                <div style={S.stepIcon}>{step.icon}</div>
+                <div>
+                  <div style={S.stepNum}>KROK {i + 1}</div>
+                  <div style={S.stepTitle}>{step.title}</div>
+                  <div style={S.stepDesc}>{step.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={S.tipBox}>
+            💡 <strong>Tip:</strong> Pro oblast 3×3 km počítejte s ~15 minutami zpracování.
+            Větší oblasti se automaticky rozdělí na dlaždice. Data z ČÚZK jsou zdarma a pokrývají celou ČR.
+          </div>
+        </div>
+
+        <div style={S.footer}>
+          <label style={S.checkLabel}>
+            <input
+              type="checkbox"
+              checked={dontShow}
+              onChange={(e) => setDontShow(e.target.checked)}
+            />
+            Příště nezobrazovat
+          </label>
+          <button
+            style={S.startBtn}
+            onClick={handleClose}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#2d3448'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#1a1f2e'}
+          >
+            Začít →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

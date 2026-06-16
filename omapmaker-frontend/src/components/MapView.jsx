@@ -63,7 +63,7 @@ const S = {
 
 function fmtCoord(v) { return v.toFixed(4); }
 
-export default function MapView({ bbox, onBboxChange, onCuzkComplete }) {
+export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp }) {
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
   const rectRef = useRef(null);
@@ -263,6 +263,31 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete }) {
             {kmLat && <span style={{ marginLeft: 6, color: 'var(--text-muted)' }}>~{kmLat}×{kmLon} km</span>}
           </span>
         )}
+        <button
+          style={{
+            ...S.toolBtn,
+            marginLeft: 'auto',
+            borderRadius: '50%',
+            width: 26, height: 26, padding: 0,
+            fontWeight: 600, fontSize: 13,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}
+          onClick={onHelp}
+          title="Nápověda — Jak na to?"
+        >?</button>
+        <button
+          style={{
+            ...S.toolBtn,
+            marginLeft: 'auto',
+            width: 26, height: 26, padding: 0,
+            borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 500, fontSize: 12,
+          }}
+          onClick={onHelp}
+          title="Jak na to?"
+        >?</button>
       </div>
 
       {/* ČÚZK inline panel — zobrazí se po výběru oblasti */}
@@ -312,9 +337,6 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete }) {
       {/* Mapa */}
       <div style={S.mapContainer}>
         <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
-        {tool === 'pan' && !bbox && (
-          <div style={S.hint}>Vyberte oblast – nástroj Výběr oblasti</div>
-        )}
         {tool === 'select' && !bbox && (
           <div style={S.hint}>Táhněte myší pro výběr oblasti — pak stáhněte z ČÚZK nebo nahrajte vlastní data</div>
         )}
