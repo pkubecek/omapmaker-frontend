@@ -479,7 +479,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
         </div>
       </CollapsibleSection>
       {/* Mikrotvary — rozbalovací */}
-      <CollapsibleSection label="Mikrotvary terénu" defaultOpen={false}>
+      <CollapsibleSection label="Tvary reliéfu" defaultOpen={false}>
         <div style={{ ...S.label, marginBottom: 8 }}>Prohlubně</div>
         {[
           ['Min. průměr (m)', 'depMinDiameter', '0.5', '0.5', '50', 'Minimální průměr prohlubně v metrech. Menší objekty se ignorují.'],
