@@ -4,7 +4,7 @@ const STEPS = [
   {
     icon: '↓',
     title: 'Stáhněte LiDAR data z ČÚZK',
-    desc: 'V mapovém okně vyberte oblast nástrojem "Výběr oblasti" — táhněte myší. Pod mapou se zobrazí panel pro stažení DMR a DMP dat přímo z ČÚZK. Stahování trvá několik minut podle velikosti oblasti.',
+    desc: 'V mapovém okně vyberte oblast nástrojem "Výběr oblasti" —> táhněte myší. Pod mapou se zobrazí panel pro stažení DMR a DMP dat přímo z ČÚZK. Stahování trvá několik desítek sekund podle velikosti oblasti.',
   },
   {
     icon: '📁',
@@ -19,7 +19,7 @@ const STEPS = [
   {
     icon: '▶',
     title: 'Generujte mapu',
-    desc: 'Klikněte na "Generovat mapu" v pravé liště. Zpracování trvá obvykle 3–15 minut podle velikosti oblasti. Průběh sledujte v pravém panelu.',
+    desc: 'Klikněte na "Generovat mapu" v pravé liště. Zpracování trvá obvykle 2–10 minut podle velikosti oblasti. Průběh sledujte v pravém panelu.',
   },
   {
     icon: '🌲',

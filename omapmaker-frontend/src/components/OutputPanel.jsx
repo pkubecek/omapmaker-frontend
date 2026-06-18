@@ -180,6 +180,7 @@ const STATUS_LABELS = {
 
 export default function OutputPanel({ job, logLines, canRun, running, onRun, isMobile }) {
   const logRef = useRef(null);
+  const [lightbox, setLightbox] = useState(false);
   const { status = 'idle', progress = 0, step = '', jobId = null } = job || {};
   const isDone = status === 'done';
   const isError = status === 'error';
@@ -188,6 +189,13 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun, isM
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [logLines]);
+
+  // Zavření lightboxu klávesou Escape
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') setLightbox(false); };
+    if (lightbox) window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightbox]);
 
   const panelStyle = {
     ...S.panel,
@@ -259,14 +267,25 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun, isM
       {/* Output */}
       <div style={S.outputSection}>
         <div style={S.sectionLabel}>Výstup</div>
-        <div style={S.previewWrap}>
+        <div
+          style={{ ...S.previewWrap, cursor: isDone && jobId ? 'zoom-in' : 'default' }}
+          onClick={() => isDone && jobId && setLightbox(true)}
+          title={isDone && jobId ? 'Kliknutím zvětšit' : undefined}
+        >
           {isDone && jobId ? (
-            <img
-              style={S.previewImg}
-              src={getPngUrl(jobId)}
-              alt="Náhled vygenerované mapy"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
+            <>
+              <img
+                style={S.previewImg}
+                src={getPngUrl(jobId)}
+                alt="Náhled vygenerované mapy"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+              <div style={{
+                position: 'absolute', bottom: 6, right: 6,
+                background: 'rgba(0,0,0,0.45)', borderRadius: 4,
+                padding: '2px 5px', fontSize: 11, color: '#fff', pointerEvents: 'none',
+              }}>⛶</div>
+            </>
           ) : (
             <div style={S.previewPlaceholder}>
               <div style={S.placeholderIcon}>🗺</div>
@@ -276,6 +295,39 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun, isM
             </div>
           )}
         </div>
+
+        {/* Lightbox */}
+        {lightbox && (
+          <div
+            onClick={() => setLightbox(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000,
+              background: 'rgba(0,0,0,0.82)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'zoom-out',
+            }}
+          >
+            <img
+              src={getPngUrl(jobId)}
+              alt="Mapa"
+              style={{
+                maxWidth: '92vw', maxHeight: '92vh',
+                objectFit: 'contain', borderRadius: 4,
+                boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setLightbox(false)}
+              style={{
+                position: 'fixed', top: 18, right: 22,
+                background: 'none', border: 'none', color: '#fff',
+                fontSize: 28, cursor: 'pointer', lineHeight: 1,
+                opacity: 0.8,
+              }}
+            >×</button>
+          </div>
+        )}
 
         <DlBtn href={isDone && jobId ? getPngUrl(jobId) : undefined}
           download="OMap.png" disabled={!isDone} primary>
