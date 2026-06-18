@@ -546,8 +546,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
           </label>
           <Tooltip text="Automaticky stáhne vektorová data ZABAGED® pro vybranou oblast přes WFS službu ČÚZK. Zdarma, bez registrace. Pokud je zaškrtnuto, ruční nahrání souborů není nutné." />
         </div>
-
-        {/* Ruční nahrání — skryto pokud je aktivní WFS stahování */}
+        {/*
         {!settings.download_zabaged && (
         <>
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 6 }}>
@@ -584,7 +583,6 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
         >
           + Přidat ZABAGED® soubory
         </button>
-        {/* Uživatel vybere celou sadu (.shp + .dbf + .shx + .prj), UI zobrazuje jen .shp */}
         <input ref={zabRef} type="file" accept=".shp,.dbf,.shx,.prj,.cpg,.qpj" multiple style={{ display: 'none' }}
           onChange={(e) => addFiles('zabaged', e.target.files)} />
         </>
@@ -625,7 +623,8 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
           + Přidat ISOM vrstvy
         </button>
         <input ref={isomRef} type="file" accept=".shp,.dbf,.shx,.prj,.cpg,.qpj" multiple style={{ display: 'none' }}
-          onChange={(e) => addFiles('isom', e.target.files)} />
+          onChange={(e) => addFiles('isom', e.target.files)} /> 
+          */}
       </div>
     </div>
   );
