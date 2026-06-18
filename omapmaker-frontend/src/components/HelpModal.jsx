@@ -24,12 +24,7 @@ const STEPS = [
   {
     icon: '🌲',
     title: 'Volitelná ZABAGED® data',
-    desc: (
-        <>
-        Pro přesnější výsledky je možné nahrát data ze ZABAGED®. Doporučení najdete {' '} <a href="https://www.geoinformatics.upol.cz/dprace/bakalarske/kubecek26/#vysledky" target="_blank" rel="noopener noreferrer"
-          style={{ color: '#5a9ab5' }}>zde</a>. Můžete také přidat vlastní vrstvy — název souboru musí odpovídat číslu symbolu (např. 301.shp pro Nepřekonatelné vodní těleso).
-        </>
-        )
+    desc: ('Zakliknutím checkboxu je možné vykreslit také data ze ZABAGED®, zatím pouze bez možnosti výběru jednotlivých vrstev.')
   },
   {
     icon: '🗺',

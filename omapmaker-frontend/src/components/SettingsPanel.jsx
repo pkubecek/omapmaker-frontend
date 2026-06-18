@@ -544,7 +544,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
           <label htmlFor="downloadZabaged" style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', userSelect: 'none' }}>
             Stáhnout ZABAGED® automaticky z ČÚZK
           </label>
-          <Tooltip text="Automaticky stáhne vektorová data ZABAGED® pro vybranou oblast přes WFS službu ČÚZK. Zdarma, bez registrace. Pokud je zaškrtnuto, ruční nahrání souborů není nutné." />
+          <Tooltip text="Automaticky stáhne vektorová data ZABAGED® pro oblast přes WFS službu ČÚZK." />
         </div>
         {/*
         {!settings.download_zabaged && (
