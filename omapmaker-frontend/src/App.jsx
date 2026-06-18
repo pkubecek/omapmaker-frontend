@@ -39,6 +39,7 @@ const DEFAULT_SETTINGS = {
     man_made: true,
     magnetic_lines: false,
   },
+  download_zabaged: false,
 };
 
 const DEFAULT_FILES = {
@@ -156,6 +157,7 @@ export default function App() {
         min_height: parseFloat(settings.knoMinHeight),
       },
       layers: settings.layers,
+      download_zabaged: !!settings.download_zabaged,
       bbox: bbox || null,
     };
 

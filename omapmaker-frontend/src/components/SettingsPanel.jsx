@@ -532,10 +532,27 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
       <div style={{ ...S.section, flex: 1 }}>
         <div style={S.label}>Volitelná vektorová data</div>
 
+        {/* Checkbox: automatické stažení ZABAGED přes WFS */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <input
+            type="checkbox"
+            id="downloadZabaged"
+            checked={!!settings.download_zabaged}
+            onChange={(e) => set('download_zabaged', e.target.checked)}
+            style={{ cursor: 'pointer', width: 14, height: 14 }}
+          />
+          <label htmlFor="downloadZabaged" style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer', userSelect: 'none' }}>
+            Stáhnout ZABAGED® automaticky z ČÚZK
+          </label>
+          <Tooltip text="Automaticky stáhne vektorová data ZABAGED® pro vybranou oblast přes WFS službu ČÚZK. Zdarma, bez registrace. Pokud je zaškrtnuto, ruční nahrání souborů není nutné." />
+        </div>
+
+        {/* Ruční nahrání — skryto pokud je aktivní WFS stahování */}
+        {!settings.download_zabaged && (
+        <>
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 6 }}>
           ZABAGED® (.shp) 
           <Tooltip text={TOOLTIPS.zabaged} />
-
         </div>
         <div style={S.optionalListbox}>
           {(files.zabaged || []).filter(f => f.name.toLowerCase().endsWith('.shp')).map((f) => {
@@ -570,6 +587,8 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
         {/* Uživatel vybere celou sadu (.shp + .dbf + .shx + .prj), UI zobrazuje jen .shp */}
         <input ref={zabRef} type="file" accept=".shp,.dbf,.shx,.prj,.cpg,.qpj" multiple style={{ display: 'none' }}
           onChange={(e) => addFiles('zabaged', e.target.files)} />
+        </>
+        )}
 
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 6, marginTop: 8 }}>
           Vlastní vrstvy (.shp) 
