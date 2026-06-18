@@ -189,7 +189,7 @@ const TOOLTIPS = {
   bin2: 'Výška do které je vegetace klasifikována jako znak (znak 410).',
   bin3: 'Výška do které je vegetace klasifikována jako chůze (znak 408).',
   bin4: 'Výška do které je vegetace klasifikována jako znak 406. Nad touto výškou = les (znak 405).',
-  zabaged: 'Nahrajte data veformátu .shp. Název souboru odpovídá názvu vrstvy v ZABAGED® (např. "LesniPudaSeStromy.shp")',
+  zabaged: 'Vyberte celou sadu shapefile souborů (.shp, .dbf, .shx, .prj). V seznamu se zobrazí jen .shp soubory. Název musí odpovídat vrstvě ZABAGED® (např. "VodniTok.shp")',
   other: 'Jakákoliv jiná vrstva ve formátu .shp, která svýmnázvem odpovídá danému znaku (např. "301.shp")'
 };
 
@@ -364,7 +364,10 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
     onSettings({ ...settings, layers: { ...settings.layers, [key]: !settings.layers[key] } });
 
   const addFiles = (type, newFiles) => {
-    onFiles({ ...files, [type]: [...(files[type] || []), ...Array.from(newFiles)] });
+    const existing = files[type] || [];
+    const existingNames = new Set(existing.map(f => f.name));
+    const toAdd = Array.from(newFiles).filter(f => !existingNames.has(f.name));
+    onFiles({ ...files, [type]: [...existing, ...toAdd] });
   };
   const removeOptional = (type, idx) => {
     const arr = [...files[type]];
@@ -535,13 +538,23 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
 
         </div>
         <div style={S.optionalListbox}>
-          {(files.zabaged || []).map((f, i) => (
-            <div style={S.optionalItem} key={i}>
-              <span style={S.optionalItemName}>{f.name}</span>
-              <button style={S.removeBtn} onClick={() => removeOptional('zabaged', i)}>×</button>
-            </div>
-          ))}
-          {!(files.zabaged || []).length && (
+          {(files.zabaged || []).filter(f => f.name.toLowerCase().endsWith('.shp')).map((f) => {
+            const baseName = f.name.replace(/\.shp$/i, '');
+            return (
+              <div style={S.optionalItem} key={f.name}>
+                <span style={S.optionalItemName}>{f.name}</span>
+                <button style={S.removeBtn} onClick={() => {
+                  onFiles({
+                    ...files,
+                    zabaged: (files.zabaged || []).filter(
+                      x => x.name.replace(/\.[^.]+$/, '') !== baseName
+                    ),
+                  });
+                }}>×</button>
+              </div>
+            );
+          })}
+          {!(files.zabaged || []).some(f => f.name.toLowerCase().endsWith('.shp')) && (
             <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: '4px 4px' }}>
               Žádné soubory
             </div>
@@ -554,7 +567,8 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
         >
           + Přidat ZABAGED® soubory
         </button>
-        <input ref={zabRef} type="file" accept=".shp" multiple style={{ display: 'none' }}
+        {/* Uživatel vybere celou sadu (.shp + .dbf + .shx + .prj), UI zobrazuje jen .shp */}
+        <input ref={zabRef} type="file" accept=".shp,.dbf,.shx,.prj,.cpg,.qpj" multiple style={{ display: 'none' }}
           onChange={(e) => addFiles('zabaged', e.target.files)} />
 
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 6, marginTop: 8 }}>
@@ -562,13 +576,23 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
           <Tooltip text={TOOLTIPS.other} />
         </div>
         <div style={S.optionalListbox}>
-          {(files.isom || []).map((f, i) => (
-            <div style={S.optionalItem} key={i}>
-              <span style={S.optionalItemName}>{f.name}</span>
-              <button style={S.removeBtn} onClick={() => removeOptional('isom', i)}>×</button>
-            </div>
-          ))}
-          {!(files.isom || []).length && (
+          {(files.isom || []).filter(f => f.name.toLowerCase().endsWith('.shp')).map((f) => {
+            const baseName = f.name.replace(/\.shp$/i, '');
+            return (
+              <div style={S.optionalItem} key={f.name}>
+                <span style={S.optionalItemName}>{f.name}</span>
+                <button style={S.removeBtn} onClick={() => {
+                  onFiles({
+                    ...files,
+                    isom: (files.isom || []).filter(
+                      x => x.name.replace(/\.[^.]+$/, '') !== baseName
+                    ),
+                  });
+                }}>×</button>
+              </div>
+            );
+          })}
+          {!(files.isom || []).some(f => f.name.toLowerCase().endsWith('.shp')) && (
             <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: '4px 4px' }}>
               Žádné soubory
             </div>
@@ -581,7 +605,7 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
         >
           + Přidat ISOM vrstvy
         </button>
-        <input ref={isomRef} type="file" accept=".shp" multiple style={{ display: 'none' }}
+        <input ref={isomRef} type="file" accept=".shp,.dbf,.shx,.prj,.cpg,.qpj" multiple style={{ display: 'none' }}
           onChange={(e) => addFiles('isom', e.target.files)} />
       </div>
     </div>
