@@ -115,8 +115,22 @@ export default function App() {
     const formData = new FormData();
     formData.append('dtm', files.dtm);
     formData.append('dsm', files.dsm);
-    (files.zabaged || []).forEach((f) => formData.append('zabaged', f));
-    (files.isom || []).forEach((f) => formData.append('isom', f));
+    // Posílej jen .shp soubory jako 'zabaged' — backend je zpracuje přes gpd.read_file()
+    // Sidecar soubory (.dbf, .shx, .prj) pošli zvlášť — backend je uloží do stejné složky
+    (files.zabaged || []).forEach((f) => {
+      if (f.name.toLowerCase().endsWith('.shp')) {
+        formData.append('zabaged', f);
+      } else {
+        formData.append('zabaged_sidecar', f);
+      }
+    });
+    (files.isom || []).forEach((f) => {
+      if (f.name.toLowerCase().endsWith('.shp')) {
+        formData.append('isom', f);
+      } else {
+        formData.append('isom_sidecar', f);
+      }
+    });
 
     const params = {
       crs: settings.crs,
@@ -131,16 +145,6 @@ export default function App() {
         parseFloat(settings.bin3),
         parseFloat(settings.bin4),
       ],
-      depressions: {
-        min_diameter: parseFloat(settings.depMinDiameter),
-        max_diameter: parseFloat(settings.depMaxDiameter),
-        min_depth: parseFloat(settings.depMinDepth),
-      },
-      knolls: {
-        min_diameter: parseFloat(settings.knoMinDiameter),
-        max_diameter: parseFloat(settings.knoMaxDiameter),
-        min_height: parseFloat(settings.knoMinHeight),
-      },
       depressions: {
         min_diameter: parseFloat(settings.depMinDiameter),
         max_diameter: parseFloat(settings.depMaxDiameter),
