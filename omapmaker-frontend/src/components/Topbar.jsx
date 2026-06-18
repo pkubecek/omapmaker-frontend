@@ -61,7 +61,7 @@ export default function Topbar({ status }) {
       <div style={styles.brand}>
         <span style={styles.dot} />
         OMapMaker
-        <span style={styles.version}>v7</span>
+        <span style={styles.version}>v1.0</span>
       </div>
       <span style={styles.status}>{status}</span>
     </div>
