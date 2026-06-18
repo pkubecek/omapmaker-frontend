@@ -150,7 +150,7 @@ export default function HelpModal({ onClose }) {
           </div>
 
           <div style={S.tipBox}>
-            💡 <strong>Tip:</strong> Pro oblast 3×3 km počítejte s ~15 minutami zpracování.
+            💡 <strong>Tip:</strong> Pro oblast 3×3 km počítejte s 8 minutami zpracování.
             Větší oblasti se automaticky rozdělí na dlaždice. Data z ČÚZK jsou zdarma a pokrývají celou ČR.
           </div>
         </div>
