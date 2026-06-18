@@ -629,3 +629,21 @@ export default function SettingsPanel({ settings, onSettings, files, onFiles, is
     </div>
   );
 }
+
+export const DEFAULT_SETTINGS = {
+  crs: 'EPSG:5514',
+  scale: '10000',
+  paper: 'A4 na šířku',
+  sigma: 4,
+  slopeThreshold: 45,
+  northRotation: 5.0,
+  bin1: 1, bin2: 2, bin3: 6, bin4: 12,
+  depMinDiameter: 2, depMaxDiameter: 5, depMinDepth: 0.7,
+  knoMinDiameter: 1.5, knoMaxDiameter: 10, knoMinHeight: 0.5,
+  download_zabaged: false,
+  layers: {
+    contours: true, rocks: true, water: true,
+    vegetation: true, roads: true, buildings: true,
+    man_made: true, magnetic_lines: false,
+  },
+};
