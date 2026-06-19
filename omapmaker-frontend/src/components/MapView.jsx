@@ -64,15 +64,6 @@ const S = {
 function fmtCoord(v) { return v.toFixed(4); }
 
 // Hrubá detekce země podle středu bbox (WGS84)
-function detectCountry(bbox) {
-  if (!bbox) return 'cz';
-  const lat = (bbox.min_lat + bbox.max_lat) / 2;
-  const lon = (bbox.min_lon + bbox.max_lon) / 2;
-  // Polsko: ~49.0–54.9 N, 14.1–24.2 E
-  if (lat >= 49.0 && lat <= 54.9 && lon >= 14.1 && lon <= 24.2) return 'pl';
-  return 'cz';
-}
-
 
 // Dostupné zdroje dat
 const DATA_SOURCES = [
@@ -83,7 +74,7 @@ const DATA_SOURCES = [
   { key: 'de',  flag: '🇩🇪', label: 'BKG',     sublabel: 'Německo',          available: false },
 ];
 
-function CountryDropdown({ country, manualCountry, detectConfidence, disabled, onChange }) {
+function CountryDropdown({ country, disabled, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -97,17 +88,7 @@ function CountryDropdown({ country, manualCountry, detectConfidence, disabled, o
 
   const current = DATA_SOURCES.find(s => s.key === country) || DATA_SOURCES[0];
 
-  const autoTag = !manualCountry ? (
-    <span style={{
-      fontSize: 9,
-      fontFamily: 'var(--mono)',
-      color: detectConfidence === 'border' ? 'var(--rock)' : 'var(--forest)',
-      marginLeft: 4,
-      opacity: 0.85,
-    }}>
-      {detectConfidence === 'border' ? '⚠ hranice' : '· auto'}
-    </span>
-  ) : null;
+  const autoTag = null;
 
   return (
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
@@ -215,17 +196,9 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
 
   // Detekovaná/ručně zvolená země
   const [country, setCountry] = useState('cz');
-  const [manualCountry, setManualCountry] = useState(false);
-  const [detectConfidence, setDetectConfidence] = useState('auto');
 
-  // Auto-detekce při změně bbox (jen pokud uživatel nepřepnul ručně)
   useEffect(() => {
-    if (bbox && !manualCountry) {
-      const { country: detected, confidence } = detectCountry(bbox);
-      setCountry(detected);
-      setDetectConfidence(confidence);
-    }
-    if (!bbox) { setManualCountry(false); setDetectConfidence('auto'); }
+    if (!bbox) setCountry('cz');
   }, [bbox]);
 
   // Init map
@@ -585,10 +558,8 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
           {/* Dropdown výběr zdroje dat */}
           <CountryDropdown
             country={country}
-            manualCountry={manualCountry}
-            detectConfidence={detectConfidence}
             disabled={cuzkState === 'downloading'}
-            onChange={(c) => { setCountry(c); setManualCountry(true); setCuzkState('idle'); }}
+            onChange={(c) => { setCountry(c); setCuzkState('idle'); }}
           />
 
           <div style={{ width: '0.5px', height: 16, background: 'var(--panel-border)', flexShrink: 0 }} />
