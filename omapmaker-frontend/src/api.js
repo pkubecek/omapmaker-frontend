@@ -76,3 +76,24 @@ export async function downloadCuzk(bbox, dsmType, outDir) {
   const res = await api.post('/api/download/cuzk', { bbox, dsm_type: dsmType });
   return res.data;
 }
+
+/**
+ * Spustí stahování polských LiDAR dat z GUGiK na pozadí.
+ * Vrací { download_id }
+ */
+export async function startPolandDownload(bbox, useLidar = true) {
+  const res = await api.post('/api/download/poland', {
+    bbox,
+    use_lidar_point_cloud: useLidar,
+  });
+  return res.data;
+}
+
+/**
+ * Polling stavu stahování Polska.
+ * Vrací { status, progress, step, dmr_path, dmp_path, crs, error }
+ */
+export async function getPolandStatus(downloadId) {
+  const res = await api.get(`/api/download/poland/${downloadId}`);
+  return res.data;
+}

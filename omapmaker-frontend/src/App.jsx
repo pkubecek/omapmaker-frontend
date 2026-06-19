@@ -173,10 +173,16 @@ export default function App() {
     }
   }, [files, settings, bbox, addLog, pollJob]);
 
-  const handleCuzkComplete = useCallback((dmrFile, dmpFile) => {
+  const handleCuzkComplete = useCallback((dmrFile, dmpFile, crs) => {
     addLog(`DTM načteno: ${dmrFile.name} (${(dmrFile.size / 1e6).toFixed(1)} MB)`, 'ok');
-    addLog(`DSM načteno: ${dmpFile.name} (${(dmpFile.size / 1e6).toFixed(1)} MB)`, 'ok');
-    setFiles(prev => ({ ...prev, dtm: dmrFile, dsm: dmpFile }));
+    if (dmpFile) addLog(`DSM načteno: ${dmpFile.name} (${(dmpFile.size / 1e6).toFixed(1)} MB)`, 'ok');
+    else addLog('DSM nedostupný (pipeline použije jen DTM)', 'warn');
+    setFiles(prev => ({ ...prev, dtm: dmrFile, dsm: dmpFile || prev.dsm }));
+    // Pokud download vrátil jiné CRS (např. EPSG:2180 pro Polsko), aktualizuj settings
+    if (crs && crs !== 'EPSG:5514') {
+      setSettings(prev => ({ ...prev, crs }));
+      addLog(`CRS nastaveno na ${crs}`, 'info');
+    }
   }, [addLog]);
 
   const canRun = Boolean(files.dtm && files.dsm);

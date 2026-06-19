@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { startCuzkDownload, getCuzkStatus, getDmrUrl, getDmpUrl } from '../api';
+import { startCuzkDownload, getCuzkStatus, startPolandDownload, getPolandStatus } from '../api';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -63,6 +63,16 @@ const S = {
 
 function fmtCoord(v) { return v.toFixed(4); }
 
+// Hrubá detekce země podle středu bbox (WGS84)
+function detectCountry(bbox) {
+  if (!bbox) return 'cz';
+  const lat = (bbox.min_lat + bbox.max_lat) / 2;
+  const lon = (bbox.min_lon + bbox.max_lon) / 2;
+  // Polsko: ~49.0–54.9 N, 14.1–24.2 E
+  if (lat >= 49.0 && lat <= 54.9 && lon >= 14.1 && lon <= 24.2) return 'pl';
+  return 'cz';
+}
+
 export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, isMobile }) {
   const mapRef = useRef(null);
   const leafletRef = useRef(null);
@@ -75,6 +85,16 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
   const [cuzkState, setCuzkState] = useState('idle'); // idle | downloading | done | error
   const [cuzkProgress, setCuzkProgress] = useState(0);
   const [cuzkMsg, setCuzkMsg] = useState('');
+
+  // Detekovaná/ručně zvolená země
+  const [country, setCountry] = useState('cz'); // 'cz' | 'pl'
+  const [manualCountry, setManualCountry] = useState(false); // true = uživatel přepnul ručně
+
+  // Auto-detekce při změně bbox (jen pokud uživatel nepřepnul ručně)
+  useEffect(() => {
+    if (bbox && !manualCountry) setCountry(detectCountry(bbox));
+    if (!bbox) { setManualCountry(false); }
+  }, [bbox]);
 
   // Init map
   useEffect(() => {
@@ -295,6 +315,70 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
     }, 3000);
   }, [bbox, dsmType, cuzkState, onCuzkComplete]);
 
+  // Polsko stahování s pollingem
+  const handlePolandDownload = useCallback(async () => {
+    if (!bbox || cuzkState === 'downloading') return;
+    setCuzkState('downloading');
+    setCuzkProgress(5);
+    setCuzkMsg('Spouštím stahování z GUGiK...');
+
+    let dlId = null;
+    try {
+      const { download_id } = await startPolandDownload(bbox, true);
+      dlId = download_id;
+    } catch (err) {
+      setCuzkMsg(`Chyba: ${err.response?.data?.detail || err.message}`);
+      setCuzkState('error');
+      return;
+    }
+
+    const poll = setInterval(async () => {
+      try {
+        const s = await getPolandStatus(dlId);
+        setCuzkProgress(s.progress || 0);
+        setCuzkMsg(s.step || '');
+
+        if (s.status === 'done') {
+          clearInterval(poll);
+          setCuzkMsg('Načítám soubory...');
+          try {
+            const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+            const dmrResp = await fetch(`${BASE}/api/download/poland/${dlId}/dmr`);
+            const dmrBlob = await dmrResp.blob();
+            const dmrFile = new File([dmrBlob], 'PL_LiDAR_DTM_merged.laz', { type: 'application/octet-stream' });
+
+            // DSM je volitelný
+            let dmpFile = null;
+            if (s.dmp_path) {
+              const dmpResp = await fetch(`${BASE}/api/download/poland/${dlId}/dmp`);
+              if (dmpResp.ok) {
+                const dmpBlob = await dmpResp.blob();
+                dmpFile = new File([dmpBlob], 'PL_NMPT_merged.laz', { type: 'application/octet-stream' });
+              }
+            }
+
+            setCuzkState('done');
+            setCuzkProgress(100);
+            setCuzkMsg('✓ Soubory načteny jako vstup');
+            // crs z odpovědi předáme jako třetí argument
+            if (onCuzkComplete) onCuzkComplete(dmrFile, dmpFile, s.crs || 'EPSG:2180');
+          } catch (fetchErr) {
+            setCuzkMsg(`Chyba načítání souborů: ${fetchErr.message}`);
+            setCuzkState('error');
+          }
+        } else if (s.status === 'error') {
+          clearInterval(poll);
+          setCuzkMsg(`Chyba: ${s.error || s.step}`);
+          setCuzkState('error');
+        }
+      } catch (pollErr) {
+        clearInterval(poll);
+        setCuzkMsg(`Chyba připojení: ${pollErr.message}`);
+        setCuzkState('error');
+      }
+    }, 3000);
+  }, [bbox, cuzkState, onCuzkComplete]);
+
   const bboxLabel = bbox
     ? `${fmtCoord(bbox.min_lat)}–${fmtCoord(bbox.max_lat)} N · ${fmtCoord(bbox.min_lon)}–${fmtCoord(bbox.max_lon)} E`
     : '';
@@ -353,7 +437,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
         >?</button>
       </div>
 
-      {/* ČÚZK inline panel — zobrazí se po výběru oblasti */}
+      {/* Download panel — zobrazí se po výběru oblasti */}
       {bbox && (
         <div style={{
           ...S.cuzkPanel,
@@ -365,25 +449,71 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
           {isMobile && bboxLabel && (
             <span style={{ ...S.cuzkLabel, fontSize: 9 }}>{bboxLabel}</span>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={S.cuzkLabel}>Stáhnout z ČÚZK:</span>
-            <select
-            style={S.cuzkSelect}
-            value={dsmType}
-            onChange={(e) => setDsmType(e.target.value)}
-            disabled={cuzkState === 'downloading'}
-          >
-            <option value="DMPOK">DMP OK (doporučeno)</option>
-            <option value="DMP1G">DMP 1G</option>
-          </select>
+
+          {/* Přepínač země */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+            <span style={S.cuzkLabel}>Zdroj dat:</span>
+            <button
+              style={{
+                ...S.cuzkSelect,
+                padding: '3px 8px',
+                background: country === 'cz' ? 'var(--ink)' : '#fff',
+                color: country === 'cz' ? '#fff' : 'var(--text-secondary)',
+                border: '0.5px solid var(--panel-border)',
+                cursor: 'pointer',
+                borderRadius: 'var(--radius-sm) 0 0 var(--radius-sm)',
+                borderRight: 'none',
+              }}
+              onClick={() => { setCountry('cz'); setManualCountry(true); setCuzkState('idle'); }}
+              disabled={cuzkState === 'downloading'}
+            >🇨🇿 ČÚZK</button>
+            <button
+              style={{
+                ...S.cuzkSelect,
+                padding: '3px 8px',
+                background: country === 'pl' ? 'var(--ink)' : '#fff',
+                color: country === 'pl' ? '#fff' : 'var(--text-secondary)',
+                border: '0.5px solid var(--panel-border)',
+                cursor: 'pointer',
+                borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
+              }}
+              onClick={() => { setCountry('pl'); setManualCountry(true); setCuzkState('idle'); }}
+              disabled={cuzkState === 'downloading'}
+            >🇵🇱 GUGiK</button>
           </div>
 
+          <div style={{ width: '0.5px', height: 16, background: 'var(--panel-border)', flexShrink: 0 }} />
+
+          {/* CZ-specifické: výběr DSM typu */}
+          {country === 'cz' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={S.cuzkLabel}>DSM:</span>
+              <select
+                style={S.cuzkSelect}
+                value={dsmType}
+                onChange={(e) => setDsmType(e.target.value)}
+                disabled={cuzkState === 'downloading'}
+              >
+                <option value="DMPOK">DMP OK (doporučeno)</option>
+                <option value="DMP1G">DMP 1G</option>
+              </select>
+            </div>
+          )}
+
+          {/* PL-specifické: info */}
+          {country === 'pl' && (
+            <span style={{ ...S.cuzkLabel, fontStyle: 'italic' }}>
+              LiDAR LAZ · NMT/NMPT · EPSG:2180
+            </span>
+          )}
+
+          {/* Tlačítko stáhnout */}
           {cuzkState === 'idle' && (
             <button style={{
               ...S.cuzkBtn,
               width: isMobile ? '100%' : 'auto',
               padding: isMobile ? '8px 12px' : '5px 12px',
-            }} onClick={handleCuzkDownload}>
+            }} onClick={country === 'cz' ? handleCuzkDownload : handlePolandDownload}>
               ↓ Stáhnout DMR + DMP
             </button>
           )}
@@ -404,7 +534,8 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
           {cuzkState === 'error' && (
             <>
               <span style={{ ...S.cuzkMsg, color: 'var(--rock)' }}>{cuzkMsg}</span>
-              <button style={{ ...S.cuzkBtn, background: 'var(--text-secondary)' }} onClick={handleCuzkDownload}>
+              <button style={{ ...S.cuzkBtn, background: 'var(--text-secondary)' }}
+                onClick={country === 'cz' ? handleCuzkDownload : handlePolandDownload}>
                 Zkusit znovu
               </button>
             </>
