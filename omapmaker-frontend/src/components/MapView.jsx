@@ -481,10 +481,10 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
               onClick={() => { setCountry('pl'); setManualCountry(false); setCuzkState('idle'); }}
               disabled={cuzkState === 'downloading'}
             >🇵🇱 GUGiK</button>
+            */}
           </div>
 
           <div style={{ width: '0.5px', height: 16, background: 'var(--panel-border)', flexShrink: 0 }} />
-
           {/* CZ-specifické: výběr DSM typu */}
           {country === 'cz' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
