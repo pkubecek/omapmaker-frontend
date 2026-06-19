@@ -467,6 +467,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
               onClick={() => { setCountry('cz'); setManualCountry(true); setCuzkState('idle'); }}
               disabled={cuzkState === 'downloading'}
             >🇨🇿 ČÚZK</button>
+            {/*
             <button
               style={{
                 ...S.cuzkSelect,
