@@ -488,7 +488,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
           {/* CZ-specifické: výběr DSM typu */}
           {country === 'cz' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={S.cuzkLabel}>DSM:</span>
+              <span style={S.cuzkLabel}>DMP:</span>
               <select
                 style={S.cuzkSelect}
                 value={dsmType}
