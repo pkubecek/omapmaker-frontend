@@ -63,14 +63,24 @@ const S = {
 
 function fmtCoord(v) { return v.toFixed(4); }
 
-// Hrubá detekce země podle středu bbox (WGS84)
+// Detekce země podle středu bbox (WGS84)
+// Vrátí { country, confidence } — confidence = 'auto' | 'border'
 function detectCountry(bbox) {
-  if (!bbox) return 'cz';
+  if (!bbox) return { country: 'cz', confidence: 'auto' };
   const lat = (bbox.min_lat + bbox.max_lat) / 2;
   const lon = (bbox.min_lon + bbox.max_lon) / 2;
-  // Polsko: ~49.0–54.9 N, 14.1–24.2 E
-  if (lat >= 49.0 && lat <= 54.9 && lon >= 14.1 && lon <= 24.2) return 'pl';
-  return 'cz';
+  // Polsko: 49.0–54.9 N, 14.12–24.15 E
+  // ČR:     48.55–51.06 N, 12.09–18.87 E
+  // Překryv (příhraniční oblast): lat 49.0–51.06, lon 14.12–18.87
+  const inPoland = lat >= 49.0 && lat <= 54.9 && lon >= 14.12 && lon <= 24.15;
+  const inCzechia = lat >= 48.55 && lat <= 51.06 && lon >= 12.09 && lon <= 18.87;
+  if (inPoland && !inCzechia) return { country: 'pl', confidence: 'auto' };
+  if (inCzechia && !inPoland) return { country: 'cz', confidence: 'auto' };
+  // Příhraniční oblast — preferuj podle longitude
+  if (inPoland && inCzechia) {
+    return { country: lon > 18.0 ? 'pl' : 'cz', confidence: 'border' };
+  }
+  return { country: 'cz', confidence: 'auto' };
 }
 
 export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, isMobile }) {
@@ -89,11 +99,16 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
   // Detekovaná/ručně zvolená země
   const [country, setCountry] = useState('cz'); // 'cz' | 'pl'
   const [manualCountry, setManualCountry] = useState(false); // true = uživatel přepnul ručně
+  const [detectConfidence, setDetectConfidence] = useState('auto'); // 'auto' | 'border'
 
   // Auto-detekce při změně bbox (jen pokud uživatel nepřepnul ručně)
   useEffect(() => {
-    if (bbox && !manualCountry) setCountry(detectCountry(bbox));
-    if (!bbox) { setManualCountry(false); }
+    if (bbox && !manualCountry) {
+      const { country: detected, confidence } = detectCountry(bbox);
+      setCountry(detected);
+      setDetectConfidence(confidence);
+    }
+    if (!bbox) { setManualCountry(false); setDetectConfidence('auto'); }
   }, [bbox]);
 
   // Init map
@@ -452,7 +467,16 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
 
           {/* Přepínač země */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-            <span style={S.cuzkLabel}>Zdroj dat:</span>
+            <span style={S.cuzkLabel}>
+              Zdroj dat{!manualCountry && (
+                <span style={{
+                  color: detectConfidence === 'border' ? 'var(--rock)' : 'var(--forest)',
+                  marginLeft: 3,
+                }}>
+                  {detectConfidence === 'border' ? '⚠ hranice' : '· auto'}
+                </span>
+              )}:
+            </span>
             <button
               style={{
                 ...S.cuzkSelect,
@@ -464,10 +488,9 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
                 borderRadius: 'var(--radius-sm) 0 0 var(--radius-sm)',
                 borderRight: 'none',
               }}
-              onClick={() => { setCountry('cz'); setManualCountry(false); setCuzkState('idle'); }}
+              onClick={() => { setCountry('cz'); setManualCountry(true); setCuzkState('idle'); }}
               disabled={cuzkState === 'downloading'}
             >🇨🇿 ČÚZK</button>
-            {/*
             <button
               style={{
                 ...S.cuzkSelect,
@@ -478,17 +501,17 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
                 cursor: 'pointer',
                 borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
               }}
-              onClick={() => { setCountry('pl'); setManualCountry(false); setCuzkState('idle'); }}
+              onClick={() => { setCountry('pl'); setManualCountry(true); setCuzkState('idle'); }}
               disabled={cuzkState === 'downloading'}
             >🇵🇱 GUGiK</button>
-            */}
           </div>
 
           <div style={{ width: '0.5px', height: 16, background: 'var(--panel-border)', flexShrink: 0 }} />
+
           {/* CZ-specifické: výběr DSM typu */}
           {country === 'cz' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={S.cuzkLabel}>DMP:</span>
+              <span style={S.cuzkLabel}>DSM:</span>
               <select
                 style={S.cuzkSelect}
                 value={dsmType}
