@@ -63,24 +63,141 @@ const S = {
 
 function fmtCoord(v) { return v.toFixed(4); }
 
-// Detekce země podle středu bbox (WGS84)
-// Vrátí { country, confidence } — confidence = 'auto' | 'border'
+// Hrubá detekce země podle středu bbox (WGS84)
 function detectCountry(bbox) {
-  if (!bbox) return { country: 'cz', confidence: 'auto' };
+  if (!bbox) return 'cz';
   const lat = (bbox.min_lat + bbox.max_lat) / 2;
   const lon = (bbox.min_lon + bbox.max_lon) / 2;
-  // Polsko: 49.0–54.9 N, 14.12–24.15 E
-  // ČR:     48.55–51.06 N, 12.09–18.87 E
-  // Překryv (příhraniční oblast): lat 49.0–51.06, lon 14.12–18.87
-  const inPoland = lat >= 49.0 && lat <= 54.9 && lon >= 14.12 && lon <= 24.15;
-  const inCzechia = lat >= 48.55 && lat <= 51.06 && lon >= 12.09 && lon <= 18.87;
-  if (inPoland && !inCzechia) return { country: 'pl', confidence: 'auto' };
-  if (inCzechia && !inPoland) return { country: 'cz', confidence: 'auto' };
-  // Příhraniční oblast — preferuj podle longitude
-  if (inPoland && inCzechia) {
-    return { country: lon > 18.0 ? 'pl' : 'cz', confidence: 'border' };
-  }
-  return { country: 'cz', confidence: 'auto' };
+  // Polsko: ~49.0–54.9 N, 14.1–24.2 E
+  if (lat >= 49.0 && lat <= 54.9 && lon >= 14.1 && lon <= 24.2) return 'pl';
+  return 'cz';
+}
+
+
+// Dostupné zdroje dat
+const DATA_SOURCES = [
+  { key: 'cz',  flag: '🇨🇿', label: 'ČÚZK',   sublabel: 'Česká republika',  available: true  },
+  { key: 'pl',  flag: '🇵🇱', label: 'GUGiK',   sublabel: 'Polsko',           available: true  },
+  { key: 'sk',  flag: '🇸🇰', label: 'ÚGKK SR', sublabel: 'Slovensko',        available: false },
+  { key: 'at',  flag: '🇦🇹', label: 'BEV',     sublabel: 'Rakousko',         available: false },
+  { key: 'de',  flag: '🇩🇪', label: 'BKG',     sublabel: 'Německo',          available: false },
+];
+
+function CountryDropdown({ country, manualCountry, detectConfidence, disabled, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  // Zavři při kliknutí mimo
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const current = DATA_SOURCES.find(s => s.key === country) || DATA_SOURCES[0];
+
+  const autoTag = !manualCountry ? (
+    <span style={{
+      fontSize: 9,
+      fontFamily: 'var(--mono)',
+      color: detectConfidence === 'border' ? 'var(--rock)' : 'var(--forest)',
+      marginLeft: 4,
+      opacity: 0.85,
+    }}>
+      {detectConfidence === 'border' ? '⚠ hranice' : '· auto'}
+    </span>
+  ) : null;
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+      {/* Trigger tlačítko */}
+      <button
+        disabled={disabled}
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 5,
+          padding: '4px 8px 4px 8px',
+          fontFamily: 'var(--mono)', fontSize: 11,
+          background: open ? 'var(--ink)' : '#fff',
+          color: open ? '#fff' : 'var(--text-primary)',
+          border: '0.5px solid var(--panel-border)',
+          borderRadius: 'var(--radius-sm)',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.6 : 1,
+          transition: 'background 0.15s, color 0.15s',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <span style={{ fontSize: 14 }}>{current.flag}</span>
+        <span>{current.label}</span>
+        {autoTag}
+        <span style={{ marginLeft: 2, opacity: 0.5, fontSize: 9 }}>▾</span>
+      </button>
+
+      {/* Dropdown menu */}
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(100% + 4px)',
+          left: 0,
+          background: '#fff',
+          border: '0.5px solid var(--panel-border)',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+          zIndex: 2000,
+          minWidth: 180,
+          overflow: 'hidden',
+        }}>
+          {DATA_SOURCES.map((src, i) => (
+            <button
+              key={src.key}
+              disabled={!src.available}
+              onClick={() => {
+                if (!src.available) return;
+                onChange(src.key);
+                setOpen(false);
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                width: '100%', padding: '8px 12px',
+                border: 'none',
+                borderBottom: i < DATA_SOURCES.length - 1 ? '0.5px solid var(--panel-border)' : 'none',
+                background: src.key === country ? '#f0ead6' : 'transparent',
+                cursor: src.available ? 'pointer' : 'not-allowed',
+                opacity: src.available ? 1 : 0.38,
+                textAlign: 'left',
+                transition: 'background 0.12s',
+              }}
+              onMouseEnter={e => { if (src.available) e.currentTarget.style.background = src.key === country ? '#e8e0cc' : '#fafaf8'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = src.key === country ? '#f0ead6' : 'transparent'; }}
+            >
+              <span style={{ fontSize: 18, lineHeight: 1 }}>{src.flag}</span>
+              <div>
+                <div style={{
+                  fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 500,
+                  color: src.available ? 'var(--text-primary)' : 'var(--text-muted)',
+                }}>
+                  {src.label}
+                  {!src.available && (
+                    <span style={{ marginLeft: 6, fontSize: 9, color: 'var(--text-muted)', fontWeight: 400 }}>
+                      připravujeme
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
+                  {src.sublabel}
+                </div>
+              </div>
+              {src.key === country && (
+                <span style={{ marginLeft: 'auto', color: 'var(--forest)', fontSize: 12 }}>✓</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, isMobile }) {
@@ -99,16 +216,11 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
   // Detekovaná/ručně zvolená země
   const [country, setCountry] = useState('cz'); // 'cz' | 'pl'
   const [manualCountry, setManualCountry] = useState(false); // true = uživatel přepnul ručně
-  const [detectConfidence, setDetectConfidence] = useState('auto'); // 'auto' | 'border'
 
   // Auto-detekce při změně bbox (jen pokud uživatel nepřepnul ručně)
   useEffect(() => {
-    if (bbox && !manualCountry) {
-      const { country: detected, confidence } = detectCountry(bbox);
-      setCountry(detected);
-      setDetectConfidence(confidence);
-    }
-    if (!bbox) { setManualCountry(false); setDetectConfidence('auto'); }
+    if (bbox && !manualCountry) setCountry(detectCountry(bbox));
+    if (!bbox) { setManualCountry(false); }
   }, [bbox]);
 
   // Init map
@@ -465,46 +577,14 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
             <span style={{ ...S.cuzkLabel, fontSize: 9 }}>{bboxLabel}</span>
           )}
 
-          {/* Přepínač země */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-            <span style={S.cuzkLabel}>
-              Zdroj dat{!manualCountry && (
-                <span style={{
-                  color: detectConfidence === 'border' ? 'var(--rock)' : 'var(--forest)',
-                  marginLeft: 3,
-                }}>
-                  {detectConfidence === 'border' ? '⚠ hranice' : '· auto'}
-                </span>
-              )}:
-            </span>
-            <button
-              style={{
-                ...S.cuzkSelect,
-                padding: '3px 8px',
-                background: country === 'cz' ? 'var(--ink)' : '#fff',
-                color: country === 'cz' ? '#fff' : 'var(--text-secondary)',
-                border: '0.5px solid var(--panel-border)',
-                cursor: 'pointer',
-                borderRadius: 'var(--radius-sm) 0 0 var(--radius-sm)',
-                borderRight: 'none',
-              }}
-              onClick={() => { setCountry('cz'); setManualCountry(true); setCuzkState('idle'); }}
-              disabled={cuzkState === 'downloading'}
-            >🇨🇿 ČÚZK</button>
-            <button
-              style={{
-                ...S.cuzkSelect,
-                padding: '3px 8px',
-                background: country === 'pl' ? 'var(--ink)' : '#fff',
-                color: country === 'pl' ? '#fff' : 'var(--text-secondary)',
-                border: '0.5px solid var(--panel-border)',
-                cursor: 'pointer',
-                borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
-              }}
-              onClick={() => { setCountry('pl'); setManualCountry(true); setCuzkState('idle'); }}
-              disabled={cuzkState === 'downloading'}
-            >🇵🇱 GUGiK</button>
-          </div>
+          {/* Dropdown výběr zdroje dat */}
+          <CountryDropdown
+            country={country}
+            manualCountry={manualCountry}
+            detectConfidence={detectConfidence}
+            disabled={cuzkState === 'downloading'}
+            onChange={(c) => { setCountry(c); setManualCountry(true); setCuzkState('idle'); }}
+          />
 
           <div style={{ width: '0.5px', height: 16, background: 'var(--panel-border)', flexShrink: 0 }} />
 
@@ -526,9 +606,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
 
           {/* PL-specifické: info */}
           {country === 'pl' && (
-            <span style={{ ...S.cuzkLabel, fontStyle: 'italic' }}>
-              LiDAR LAZ · NMT/NMPT · EPSG:2180
-            </span>
+            <span style={{ ...S.cuzkLabel, fontStyle: 'italic' }}>LiDAR · EPSG:2180</span>
           )}
 
           {/* Tlačítko stáhnout */}
