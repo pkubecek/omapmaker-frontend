@@ -477,7 +477,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
                 cursor: 'pointer',
                 borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
               }}
-              onClick={() => { setCountry('pl'); setManualCountry(true); setCuzkState('idle'); }}
+              onClick={() => { setCountry('pl'); setManualCountry(false); setCuzkState('idle'); }}
               disabled={cuzkState === 'downloading'}
             >🇵🇱 GUGiK</button>
           </div>
