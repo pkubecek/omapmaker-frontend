@@ -214,13 +214,18 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
   const [cuzkMsg, setCuzkMsg] = useState('');
 
   // Detekovaná/ručně zvolená země
-  const [country, setCountry] = useState('cz'); // 'cz' | 'pl'
-  const [manualCountry, setManualCountry] = useState(false); // true = uživatel přepnul ručně
+  const [country, setCountry] = useState('cz');
+  const [manualCountry, setManualCountry] = useState(false);
+  const [detectConfidence, setDetectConfidence] = useState('auto');
 
   // Auto-detekce při změně bbox (jen pokud uživatel nepřepnul ručně)
   useEffect(() => {
-    if (bbox && !manualCountry) setCountry(detectCountry(bbox));
-    if (!bbox) { setManualCountry(false); }
+    if (bbox && !manualCountry) {
+      const { country: detected, confidence } = detectCountry(bbox);
+      setCountry(detected);
+      setDetectConfidence(confidence);
+    }
+    if (!bbox) { setManualCountry(false); setDetectConfidence('auto'); }
   }, [bbox]);
 
   // Init map
