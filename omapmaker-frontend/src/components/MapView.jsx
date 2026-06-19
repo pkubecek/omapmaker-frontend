@@ -464,7 +464,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
                 borderRadius: 'var(--radius-sm) 0 0 var(--radius-sm)',
                 borderRight: 'none',
               }}
-              onClick={() => { setCountry('cz'); setManualCountry(true); setCuzkState('idle'); }}
+              onClick={() => { setCountry('cz'); setManualCountry(false); setCuzkState('idle'); }}
               disabled={cuzkState === 'downloading'}
             >🇨🇿 ČÚZK</button>
             {/*
