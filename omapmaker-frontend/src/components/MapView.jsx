@@ -219,7 +219,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
   // Init map — přidej polygony hranic
   useEffect(() => {
     if (leafletRef.current) return;
-    const map = L.map(mapRef.current, { center: [49.8, 15.5], zoom: 5, zoomControl: true });
+    const map = L.map(mapRef.current, { center: [49.8, 15.5], zoom: 7, zoomControl: true });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap', maxZoom: 19,
     }).addTo(map);
