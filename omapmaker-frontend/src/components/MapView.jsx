@@ -83,7 +83,7 @@ function fmtCoord(v) { return v.toFixed(4); }
 // Dostupné zdroje dat
 const DATA_SOURCES = [
   { key: 'cz',  flag: '🇨🇿', label: 'ČÚZK',   sublabel: 'Česká republika',  available: true  },
-  { key: 'pl',  flag: '🇵🇱', label: 'GUGiK',   sublabel: 'Polsko',           available: true  },
+  { key: 'pl',  flag: '🇵🇱', label: 'GUGiK (Nestabilní)',   sublabel: 'Polsko',           available: true  },
   { key: 'sk',  flag: '🇸🇰', label: 'ÚGKK SR', sublabel: 'Slovensko',        available: false },
   { key: 'at',  flag: '🇦🇹', label: 'BEV',     sublabel: 'Rakousko',         available: false },
   { key: 'de',  flag: '🇩🇪', label: 'BKG',     sublabel: 'Německo',          available: false },
