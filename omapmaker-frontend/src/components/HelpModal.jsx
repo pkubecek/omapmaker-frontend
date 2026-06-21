@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 const STEPS = [
   {
     icon: '↓',
-    title: 'Stáhněte LiDAR data z ČÚZK',
-    desc: 'V mapovém okně vyberte oblast nástrojem "Výběr oblasti" —> táhněte myší. Pod mapou se zobrazí panel pro stažení DMR a DMP dat přímo z ČÚZK. Stahování trvá několik desítek sekund podle velikosti oblasti.',
+    title: 'Stáhněte data',
+    desc: 'V mapovém okně vyberte oblast nástrojem "Výběr oblasti" —> táhněte myší. Nad mapou se zobrazí panel pro stažení DMR a DMP dat. Vyberte zdroj dat pro vybranou zemi a klikněte na Stáhnout. Stahování trvá několik desítek sekund pro ČR pro jiné země může být doba stahování delší',
   },
   {
     icon: '📁',
