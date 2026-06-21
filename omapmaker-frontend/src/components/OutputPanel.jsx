@@ -340,7 +340,7 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun, isM
         </DlBtn>
 
         <DlBtn href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/isom.crt`}
-          download="isom.crt">
+          download="OMapMaker-OpenOrienteeringMapper.crt">
           ↓ Stáhnout CRT soubor
         </DlBtn>
       </div>
