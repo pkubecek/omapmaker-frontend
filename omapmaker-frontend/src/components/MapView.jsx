@@ -227,8 +227,8 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
     const layersRef = { current: [] };
 
     const styleAvail      = { color: '#ffffff00', weight: 1.5, dashArray: '4 3', fillColor: '#ffffff00', fillOpacity: 0.0, interactive: true };
-    const styleComingSoon = { color: '#ffffff',    weight: 1.2, dashArray: '3 4', fillColor: '#ffffff',    fillOpacity: 0.0, interactive: true };
-    const styleOther      = { color: '#ffffff',    weight: 0.8, dashArray: '2 4', fillColor: '#ffffff',    fillOpacity: 0.0, interactive: false };
+    const styleComingSoon = { color: '#ffffff00',    weight: 1.2, dashArray: '3 4', fillColor: '#ffffff',    fillOpacity: 0.0, interactive: true };
+    const styleOther      = { color: '#ffffff00',    weight: 0.8, dashArray: '2 4', fillColor: '#ffffff',    fillOpacity: 0.0, interactive: false };
 
     const entries = [
       ...EUROPE_BORDERS.available.map(e => ({ ...e, style: styleAvail,      tooltip: `${e.iso === 'CZ' ? '🇨🇿 ČÚZK' : '🇵🇱 GUGiK'} — data dostupná` })),
