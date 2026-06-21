@@ -70,7 +70,7 @@ function fmtCoord(v) { return v.toFixed(4); }
 const DATA_SOURCES = [
   { key: 'cz', flag: '🇨🇿', label: 'ČÚZK',   sublabel: 'Česká republika', available: true  },
   { key: 'pl', flag: '🇵🇱', label: 'GUGiK',   sublabel: 'Polsko',          available: true  },
-  { key: 'at', flag: '🇦🇹', label: 'BEV',     sublabel: 'Rakousko',        available: true  },
+  { key: 'at', flag: '🇦🇹', label: 'BEV',     sublabel: 'Rakousko',        available: false  },
   { key: 'sk', flag: '🇸🇰', label: 'ÚGKK SR', sublabel: 'Slovensko',       available: false },
   { key: 'de', flag: '🇩🇪', label: 'BKG',     sublabel: 'Německo',         available: false },
 ];
