@@ -12,6 +12,8 @@ if (typeof document !== 'undefined') {
     'box-shadow:none;font-family:monospace;font-size:11px;padding:3px 8px;',
     'border-radius:4px;white-space:nowrap;}',
     '.map-country-tooltip::before{display:none;}',
+    '.leaflet-interactive:focus{outline:none !important;}',
+    '.leaflet-pane path{outline:none;}',
   ].join('');
   document.head.appendChild(s);
 }
@@ -224,9 +226,9 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
 
     const layersRef = { current: [] };
 
-    const styleAvail      = { color: '#3a7c3a', weight: 1.5, dashArray: '4 3', fillColor: '#3a7c3a00', fillOpacity: 0.07, interactive: true };
-    const styleComingSoon = { color: '#999',    weight: 1.2, dashArray: '3 4', fillColor: '#aaa',    fillOpacity: 0.04, interactive: true };
-    const styleOther      = { color: '#bbb',    weight: 0.8, dashArray: '2 4', fillColor: '#f3f3f381',    fillOpacity: 0.02, interactive: false };
+    const styleAvail      = { color: '#ffffff00', weight: 1.5, dashArray: '4 3', fillColor: '#ffffff00', fillOpacity: 0.0, interactive: true };
+    const styleComingSoon = { color: '#ffffff',    weight: 1.2, dashArray: '3 4', fillColor: '#ffffff',    fillOpacity: 0.3, interactive: true };
+    const styleOther      = { color: '#ffffff',    weight: 0.8, dashArray: '2 4', fillColor: '#ffffff',    fillOpacity: 0.3, interactive: false };
 
     const entries = [
       ...EUROPE_BORDERS.available.map(e => ({ ...e, style: styleAvail,      tooltip: `${e.iso === 'CZ' ? '🇨🇿 ČÚZK' : '🇵🇱 GUGiK'} — data dostupná` })),
@@ -235,7 +237,20 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
     ];
 
     entries.forEach(({ geometry, style, tooltip }) => {
-      const layer = L.geoJSON(geometry, { style: () => style, interactive: !!tooltip });
+      const layer = L.geoJSON(geometry, {
+        style: () => style,
+        interactive: !!tooltip,
+        bubblingMouseEvents: false,
+      });
+      // Zakáž focus outline na SVG elementech
+      layer.on('add', () => {
+        layer.eachLayer(l => {
+          if (l._path) {
+            l._path.style.outline = 'none';
+            l._path.setAttribute('tabindex', '-1');
+          }
+        });
+      });
       if (tooltip) {
         layer.bindTooltip(tooltip, { sticky: true, className: 'map-country-tooltip' });
         layer._tooltipContent = tooltip;  // ulož pro pozdější obnovení
