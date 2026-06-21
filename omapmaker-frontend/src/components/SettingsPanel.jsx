@@ -179,6 +179,7 @@ const S = {
 };
 
 const TOOLTIPS = {
+  crs: 'Souřadnicový systém výstupu. pokud chcete magnetické poledníky, nastavte mag. deklinaci vůči tomuto CRS',
   lidar: 'Nahrajte data ze zařízení nebo vyberte oblast tažením v mapě a stáhněte.',
   scale: 'Měřítko výsledné mapy. 1:10 000 pro detailní mapy, 1:15 000 pro větší oblasti.',
   paper: 'Formát výstupního PNG. Pokud je vybrán "Extent dat" mapa se ořízne přesně na rozsah dat.',
