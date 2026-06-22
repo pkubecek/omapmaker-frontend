@@ -114,8 +114,18 @@ export default function App() {
     addLog('Spouštím analýzu...', 'info');
 
     const formData = new FormData();
-    formData.append('dtm', files.dtm);
-    formData.append('dsm', files.dsm);
+
+    // Pokud soubory jsou na serveru (z ČÚZK/GUGiK downloadu), pošli jen cesty
+    if (files.dtm?.serverPath) {
+      formData.append('dtm_server_path', files.dtm.serverPath);
+    } else {
+      formData.append('dtm', files.dtm);
+    }
+    if (files.dsm?.serverPath) {
+      formData.append('dsm_server_path', files.dsm.serverPath);
+    } else if (files.dsm) {
+      formData.append('dsm', files.dsm);
+    }
     // Posílej jen .shp soubory jako 'zabaged' — backend je zpracuje přes gpd.read_file()
     // Sidecar soubory (.dbf, .shx, .prj) pošli zvlášť — backend je uloží do stejné složky
     (files.zabaged || []).forEach((f) => {
@@ -173,12 +183,20 @@ export default function App() {
     }
   }, [files, settings, bbox, addLog, pollJob]);
 
-  const handleCuzkComplete = useCallback((dmrFile, dmpFile, crs) => {
-    addLog(`DTM načteno: ${dmrFile.name} (${(dmrFile.size / 1e6).toFixed(1)} MB)`, 'ok');
-    if (dmpFile) addLog(`DSM načteno: ${dmpFile.name} (${(dmpFile.size / 1e6).toFixed(1)} MB)`, 'ok');
-    else addLog('DSM nedostupný (pipeline použije jen DTM)', 'warn');
-    setFiles(prev => ({ ...prev, dtm: dmrFile, dsm: dmpFile || prev.dsm }));
-    // Pokud download vrátil jiné CRS (např. EPSG:2180 pro Polsko), aktualizuj settings
+  const handleCuzkComplete = useCallback((dmrPath, dmpPath, crs, mode) => {
+    if (mode === 'server_path') {
+      // Serverové cesty — nepotřebujeme File objekty
+      addLog(`DTM načteno: ${dmrPath.split('/').pop()}`, 'ok');
+      if (dmpPath) addLog(`DSM načteno: ${dmpPath.split('/').pop()}`, 'ok');
+      else addLog('DSM nedostupný (pipeline použije jen DTM)', 'warn');
+      setFiles(prev => ({ ...prev, dtm: { serverPath: dmrPath, name: dmrPath.split('/').pop() }, dsm: dmpPath ? { serverPath: dmpPath, name: dmpPath.split('/').pop() } : prev.dsm }));
+    } else {
+      // Fallback: File objekty (ruční upload)
+      addLog(`DTM načteno: ${dmrPath.name} (${(dmrPath.size / 1e6).toFixed(1)} MB)`, 'ok');
+      if (dmpPath) addLog(`DSM načteno: ${dmpPath.name} (${(dmpPath.size / 1e6).toFixed(1)} MB)`, 'ok');
+      else addLog('DSM nedostupný (pipeline použije jen DTM)', 'warn');
+      setFiles(prev => ({ ...prev, dtm: dmrPath, dsm: dmpPath || prev.dsm }));
+    }
     if (crs && crs !== 'EPSG:5514') {
       setSettings(prev => ({ ...prev, crs }));
       addLog(`CRS nastaveno na ${crs}`, 'info');
@@ -186,12 +204,14 @@ export default function App() {
   }, [addLog]);
 
   const canRun = Boolean(files.dtm && files.dsm);
+  const hasDtm = Boolean(files.dtm?.serverPath || (files.dtm && files.dtm.size > 0));
+  const hasDsm = Boolean(files.dsm?.serverPath || (files.dsm && files.dsm.size > 0));
   const running = job.status === 'running' || job.status === 'queued';
 
   let topStatus = 'Připraveno';
-  if (!files.dtm && !files.dsm) topStatus = 'Nahrajte DTM a DSM';
-  else if (!files.dtm) topStatus = 'Chybí DTM';
-  else if (!files.dsm) topStatus = 'Chybí DSM';
+  if (!hasDtm && !hasDsm) topStatus = 'Nahrajte DTM a DSM';
+  else if (!hasDtm) topStatus = 'Chybí DTM';
+  else if (!hasDsm) topStatus = 'Chybí DSM';
   else if (running) topStatus = 'Zpracovávám...';
   else if (job.status === 'done') topStatus = 'Mapa vygenerována ✓';
   else if (job.status === 'error') topStatus = 'Chyba!';

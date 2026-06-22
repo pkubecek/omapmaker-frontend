@@ -12,8 +12,6 @@ if (typeof document !== 'undefined') {
     'box-shadow:none;font-family:monospace;font-size:11px;padding:3px 8px;',
     'border-radius:4px;white-space:nowrap;}',
     '.map-country-tooltip::before{display:none;}',
-    '.leaflet-interactive:focus{outline:none !important;}',
-    '.leaflet-pane path{outline:none;}',
   ].join('');
   document.head.appendChild(s);
 }
@@ -83,7 +81,7 @@ function fmtCoord(v) { return v.toFixed(4); }
 // Dostupné zdroje dat
 const DATA_SOURCES = [
   { key: 'cz',  flag: '🇨🇿', label: 'ČÚZK',   sublabel: 'Česká republika',  available: true  },
-  { key: 'pl',  flag: '🇵🇱', label: 'GUGiK (Beta)',   sublabel: 'Polsko',           available: true  },
+  { key: 'pl',  flag: '🇵🇱', label: 'GUGiK',   sublabel: 'Polsko',           available: true  },
   { key: 'sk',  flag: '🇸🇰', label: 'ÚGKK SR', sublabel: 'Slovensko',        available: false },
   { key: 'at',  flag: '🇦🇹', label: 'BEV',     sublabel: 'Rakousko',         available: false },
   { key: 'de',  flag: '🇩🇪', label: 'BKG',     sublabel: 'Německo',          available: false },
@@ -219,7 +217,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
   // Init map — přidej polygony hranic
   useEffect(() => {
     if (leafletRef.current) return;
-    const map = L.map(mapRef.current, { center: [49.8, 15.5], zoom: 7, zoomControl: true });
+    const map = L.map(mapRef.current, { center: [49.8, 15.5], zoom: 5, zoomControl: true });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap', maxZoom: 19,
     }).addTo(map);
@@ -227,8 +225,8 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
     const layersRef = { current: [] };
 
     const styleAvail      = { color: '#ffffff00', weight: 1.5, dashArray: '4 3', fillColor: '#ffffff00', fillOpacity: 0.0, interactive: true };
-    const styleComingSoon = { color: '#ffffff00',    weight: 1.2, dashArray: '3 4', fillColor: '#ffffff',    fillOpacity: 0.0, interactive: true };
-    const styleOther      = { color: '#ffffff00',    weight: 0.8, dashArray: '2 4', fillColor: '#ffffff',    fillOpacity: 0.0, interactive: false };
+    const styleComingSoon = { color: '#ffffff',    weight: 1.2, dashArray: '3 4', fillColor: '#ffffff',    fillOpacity: 0.3, interactive: true };
+    const styleOther      = { color: '#ffffff',    weight: 0.8, dashArray: '2 4', fillColor: '#ffffff',    fillOpacity: 0.3, interactive: false };
 
     const entries = [
       ...EUROPE_BORDERS.available.map(e => ({ ...e, style: styleAvail,      tooltip: `${e.iso === 'CZ' ? '🇨🇿 ČÚZK' : '🇵🇱 GUGiK'} — data dostupná` })),
@@ -237,20 +235,7 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
     ];
 
     entries.forEach(({ geometry, style, tooltip }) => {
-      const layer = L.geoJSON(geometry, {
-        style: () => style,
-        interactive: !!tooltip,
-        bubblingMouseEvents: false,
-      });
-      // Zakáž focus outline na SVG elementech
-      layer.on('add', () => {
-        layer.eachLayer(l => {
-          if (l._path) {
-            l._path.style.outline = 'none';
-            l._path.setAttribute('tabindex', '-1');
-          }
-        });
-      });
+      const layer = L.geoJSON(geometry, { style: () => style, interactive: !!tooltip });
       if (tooltip) {
         layer.bindTooltip(tooltip, { sticky: true, className: 'map-country-tooltip' });
         layer._tooltipContent = tooltip;  // ulož pro pozdější obnovení
@@ -452,28 +437,10 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
 
         if (s.status === 'done') {
           clearInterval(poll);
-
-          // Stáhni soubory jako Blob a vytvoř File objekty
-          setCuzkMsg('Načítám soubory...');
-          try {
-            const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-            const [dmrResp, dmpResp] = await Promise.all([
-              fetch(`${BASE}/api/download/cuzk/${dlId}/dmr`),
-              fetch(`${BASE}/api/download/cuzk/${dlId}/dmp`),
-            ]);
-            const dmrBlob = await dmrResp.blob();
-            const dmpBlob = await dmpResp.blob();
-            const dmrFile = new File([dmrBlob], 'DMR5G_merged.laz', { type: 'application/octet-stream' });
-            const dmpFile = new File([dmpBlob], `${dsmType}_merged.laz`, { type: 'application/octet-stream' });
-
-            setCuzkState('done');
-            setCuzkProgress(100);
-            setCuzkMsg('✓ Soubory načteny jako vstup');
-            if (onCuzkComplete) onCuzkComplete(dmrFile, dmpFile);
-          } catch (fetchErr) {
-            setCuzkMsg(`Chyba načítání souborů: ${fetchErr.message}`);
-            setCuzkState('error');
-          }
+          setCuzkState('done');
+          setCuzkProgress(100);
+          setCuzkMsg('✓ Hotovo');
+          if (onCuzkComplete) onCuzkComplete(s.dmr_path, s.dmp_path, 'EPSG:5514', 'server_path');
         } else if (s.status === 'error') {
           clearInterval(poll);
           setCuzkMsg(`Chyba: ${s.error || s.step}`);
@@ -512,32 +479,14 @@ export default function MapView({ bbox, onBboxChange, onCuzkComplete, onHelp, is
 
         if (s.status === 'done') {
           clearInterval(poll);
-          setCuzkMsg('Načítám soubory...');
-          try {
-            const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-            const dmrResp = await fetch(`${BASE}/api/download/poland/${dlId}/dmr`);
-            const dmrBlob = await dmrResp.blob();
-            const dmrFile = new File([dmrBlob], 'PL_LiDAR_DTM_merged.laz', { type: 'application/octet-stream' });
-
-            // DSM je volitelný
-            let dmpFile = null;
-            if (s.dmp_path) {
-              const dmpResp = await fetch(`${BASE}/api/download/poland/${dlId}/dmp`);
-              if (dmpResp.ok) {
-                const dmpBlob = await dmpResp.blob();
-                dmpFile = new File([dmpBlob], 'PL_NMPT_merged.laz', { type: 'application/octet-stream' });
-              }
-            }
-
-            setCuzkState('done');
-            setCuzkProgress(100);
-            setCuzkMsg('✓ Soubory načteny jako vstup');
-            // crs z odpovědi předáme jako třetí argument
-            if (onCuzkComplete) onCuzkComplete(dmrFile, dmpFile, s.crs || 'EPSG:2180');
-          } catch (fetchErr) {
-            setCuzkMsg(`Chyba načítání souborů: ${fetchErr.message}`);
-            setCuzkState('error');
-          }
+          setCuzkMsg('Hotovo!');
+          setCuzkState('done');
+          setCuzkProgress(100);
+          // Předej serverové cesty přímo — nepotřebujeme stahovat blob přes browser
+          const dmrServerPath = s.dmr_path;
+          const dmpServerPath = s.dmp_path || null;
+          const crs = s.crs || 'EPSG:2180';
+          if (onCuzkComplete) onCuzkComplete(dmrServerPath, dmpServerPath, crs, 'server_path');
         } else if (s.status === 'error') {
           clearInterval(poll);
           setCuzkMsg(`Chyba: ${s.error || s.step}`);
