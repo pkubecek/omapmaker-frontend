@@ -339,7 +339,7 @@ export default function OutputPanel({ job, logLines, canRun, running, onRun, isM
           ↓ Exportovat GPKG pro OpenOrienteerinMapper
         </DlBtn>
 
-        <DlBtn href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/isom.crt`}
+        <DlBtn href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/crt/OMapMaker-OpenOrienteeringMapper.crt`}
           download="OMapMaker-OpenOrienteeringMapper.crt">
           ↓ Stáhnout CRT soubor
         </DlBtn>
