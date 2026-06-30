@@ -12,6 +12,8 @@ if (typeof document !== 'undefined') {
     'box-shadow:none;font-family:monospace;font-size:11px;padding:3px 8px;',
     'border-radius:4px;white-space:nowrap;}',
     '.map-country-tooltip::before{display:none;}',
+    '.leaflet-interactive{outline:none;}',
+    '.leaflet-interactive:focus{outline:none;}',
   ].join('');
   document.head.appendChild(s);
 }
@@ -81,7 +83,7 @@ function fmtCoord(v) { return v.toFixed(4); }
 // Dostupné zdroje dat
 const DATA_SOURCES = [
   { key: 'cz',  flag: '🇨🇿', label: 'ČÚZK',   sublabel: 'Česká republika',  available: true  },
-  { key: 'pl',  flag: '🇵🇱', label: 'GUGiK',   sublabel: 'Polsko',           available: true  },
+  { key: 'pl',  flag: '🇵🇱', label: 'GUGiK',   sublabel: 'Polsko (Beta)',           available: true  },
   { key: 'sk',  flag: '🇸🇰', label: 'ÚGKK SR', sublabel: 'Slovensko',        available: false },
   { key: 'at',  flag: '🇦🇹', label: 'BEV',     sublabel: 'Rakousko',         available: false },
   { key: 'de',  flag: '🇩🇪', label: 'BKG',     sublabel: 'Německo',          available: false },
